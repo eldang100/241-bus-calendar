@@ -3,74 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>241번 버스 순번 달력</title>
+    <title>241달력</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="241번달력">
+    <meta name="apple-mobile-web-app-title" content="241달력">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1a1d27">
+    <meta name="theme-color" content="#0a1628">
     <script>
-    // ── 고급 SVG 아이콘 (딥 네이비 + 골드 버스) ──
+    // ── 프리미엄 SVG 아이콘 (딥 네이비 배경 + 블루 버스) ──
     const iconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'>
       <defs>
         <linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'>
-          <stop offset='0%' stop-color='%231a1f3a'/>
-          <stop offset='100%' stop-color='%230d1020'/>
+          <stop offset='0%' stop-color='%230a1628'/>
+          <stop offset='100%' stop-color='%23060e1c'/>
         </linearGradient>
-        <linearGradient id='gold' x1='0%' y1='0%' x2='0%' y2='100%'>
-          <stop offset='0%' stop-color='%23f0c040'/>
-          <stop offset='50%' stop-color='%23c8920a'/>
-          <stop offset='100%' stop-color='%23a06800'/>
+        <linearGradient id='bgshine' x1='0%' y1='0%' x2='100%' y2='100%'>
+          <stop offset='0%' stop-color='%23ffffff' stop-opacity='0.07'/>
+          <stop offset='100%' stop-color='%23ffffff' stop-opacity='0'/>
         </linearGradient>
-        <linearGradient id='body' x1='0%' y1='0%' x2='0%' y2='100%'>
-          <stop offset='0%' stop-color='%23d4a010'/>
-          <stop offset='100%' stop-color='%23b07808'/>
+        <linearGradient id='busbody' x1='0%' y1='0%' x2='0%' y2='100%'>
+          <stop offset='0%' stop-color='%234a90d9'/>
+          <stop offset='50%' stop-color='%232266b8'/>
+          <stop offset='100%' stop-color='%23164a90'/>
+        </linearGradient>
+        <linearGradient id='busroof' x1='0%' y1='0%' x2='0%' y2='100%'>
+          <stop offset='0%' stop-color='%235ba0e8'/>
+          <stop offset='100%' stop-color='%233070c0'/>
         </linearGradient>
         <linearGradient id='win' x1='0%' y1='0%' x2='0%' y2='100%'>
-          <stop offset='0%' stop-color='%23c8e8ff'/>
-          <stop offset='100%' stop-color='%2388c4f0'/>
+          <stop offset='0%' stop-color='%23e8f6ff'/>
+          <stop offset='100%' stop-color='%23a8d8f8'/>
+        </linearGradient>
+        <linearGradient id='silver' x1='0%' y1='0%' x2='0%' y2='100%'>
+          <stop offset='0%' stop-color='%23d0d8e8'/>
+          <stop offset='100%' stop-color='%23a0aac0'/>
+        </linearGradient>
+        <linearGradient id='accent' x1='0%' y1='0%' x2='100%' y2='0%'>
+          <stop offset='0%' stop-color='%2360c0ff'/>
+          <stop offset='100%' stop-color='%23a0e0ff'/>
         </linearGradient>
         <filter id='sh'>
-          <feDropShadow dx='0' dy='4' stdDeviation='8' flood-color='%23000' flood-opacity='0.5'/>
+          <feDropShadow dx='0' dy='6' stdDeviation='10' flood-color='%23000830' flood-opacity='0.7'/>
+        </filter>
+        <filter id='glow'>
+          <feGaussianBlur stdDeviation='3' result='blur'/>
+          <feMerge><feMergeNode in='blur'/><feMergeNode in='SourceGraphic'/></feMerge>
         </filter>
       </defs>
-      <!-- 배경 -->
-      <rect width='512' height='512' rx='110' fill='url(%23bg)'/>
-      <!-- 골드 테두리 링 -->
-      <rect x='18' y='18' width='476' height='476' rx='96' fill='none' stroke='url(%23gold)' stroke-width='6' opacity='0.6'/>
-      <!-- 버스 몸체 -->
-      <rect x='80' y='168' width='352' height='210' rx='28' fill='url(%23body)' filter='url(%23sh)'/>
+
+      <!-- 배경 라운드 사각 -->
+      <rect width='512' height='512' rx='112' fill='url(%23bg)'/>
+      <!-- 배경 광택 -->
+      <rect width='512' height='512' rx='112' fill='url(%23bgshine)'/>
+
+      <!-- 외곽 테두리 - 얇은 블루 -->
+      <rect x='12' y='12' width='488' height='488' rx='102' fill='none'
+            stroke='%234a90d9' stroke-width='3' opacity='0.5'/>
+
+      <!-- 버스 몸체 메인 -->
+      <rect x='68' y='162' width='376' height='216' rx='24' fill='url(%23busbody)' filter='url(%23sh)'/>
+
       <!-- 버스 지붕 -->
-      <rect x='96' y='148' width='320' height='40' rx='16' fill='%23c8920a'/>
-      <!-- 앞 유리 -->
-      <rect x='92' y='186' width='90' height='70' rx='10' fill='url(%23win)' opacity='0.9'/>
-      <!-- 중간 창문 1 -->
-      <rect x='200' y='190' width='70' height='60' rx='8' fill='url(%23win)' opacity='0.85'/>
-      <!-- 중간 창문 2 -->
-      <rect x='285' y='190' width='70' height='60' rx='8' fill='url(%23win)' opacity='0.85'/>
-      <!-- 뒷 창문 -->
-      <rect x='370' y='190' width='60' height='70' rx='10' fill='url(%23win)' opacity='0.9'/>
+      <rect x='88' y='140' width='336' height='42' rx='18' fill='url(%23busroof)'/>
+      <!-- 지붕 하이라이트 -->
+      <rect x='100' y='142' width='200' height='10' rx='5' fill='%23ffffff' opacity='0.25'/>
+
+      <!-- 앞유리 (크게) -->
+      <rect x='78' y='178' width='96' height='80' rx='10' fill='url(%23win)' opacity='0.95'/>
+      <!-- 앞유리 반사 -->
+      <rect x='82' y='182' width='40' height='20' rx='4' fill='%23ffffff' opacity='0.4'/>
+
+      <!-- 창문 1 -->
+      <rect x='192' y='182' width='72' height='62' rx='9' fill='url(%23win)' opacity='0.92'/>
+      <rect x='196' y='186' width='30' height='16' rx='3' fill='%23ffffff' opacity='0.35'/>
+
+      <!-- 창문 2 -->
+      <rect x='278' y='182' width='72' height='62' rx='9' fill='url(%23win)' opacity='0.92'/>
+      <rect x='282' y='186' width='30' height='16' rx='3' fill='%23ffffff' opacity='0.35'/>
+
+      <!-- 뒷유리 -->
+      <rect x='364' y='178' width='68' height='80' rx='10' fill='url(%23win)' opacity='0.95'/>
+      <rect x='368' y='182' width='28' height='20' rx='4' fill='%23ffffff' opacity='0.4'/>
+
       <!-- 버스 문 -->
-      <rect x='200' y='270' width='55' height='88' rx='6' fill='%23986008' opacity='0.7'/>
-      <line x1='227' y1='270' x2='227' y2='358' stroke='%23c8920a' stroke-width='2'/>
-      <!-- 하체 라인 -->
-      <rect x='80' y='355' width='352' height='14' rx='0' fill='%23986008'/>
-      <!-- 번호판 느낌 골드 바 -->
-      <rect x='196' y='372' width='120' height='6' rx='3' fill='url(%23gold)' opacity='0.8'/>
+      <rect x='192' y='262' width='58' height='96' rx='7' fill='%23164a90' opacity='0.85'/>
+      <line x1='221' y1='264' x2='221' y2='356' stroke='%236aacee' stroke-width='2.5' opacity='0.7'/>
+      <!-- 문 손잡이 -->
+      <rect x='214' y='300' width='5' height='20' rx='2.5' fill='%23a0d0ff' opacity='0.8'/>
+
+      <!-- 차체 하단 스커트 라인 (실버) -->
+      <rect x='68' y='356' width='376' height='18' rx='0' fill='url(%23silver)' opacity='0.7'/>
+
+      <!-- 차체 측면 블루 스트라이프 -->
+      <rect x='68' y='252' width='376' height='8' rx='0' fill='%2360c0ff' opacity='0.35'/>
+
+      <!-- 헤드라이트 (LED 스타일) -->
+      <rect x='72' y='255' width='22' height='10' rx='5' fill='%23e0f4ff' opacity='0.95' filter='url(%23glow)'/>
+      <rect x='72' y='255' width='22' height='10' rx='5' fill='%23ffffff' opacity='0.6'/>
+
+      <!-- 테일라이트 -->
+      <rect x='420' y='255' width='18' height='10' rx='5' fill='%23ff6060' opacity='0.9'/>
+
       <!-- 앞 바퀴 -->
-      <circle cx='160' cy='378' r='40' fill='%23222' />
-      <circle cx='160' cy='378' r='28' fill='%23444'/>
-      <circle cx='160' cy='378' r='14' fill='url(%23gold)'/>
+      <circle cx='156' cy='380' r='44' fill='%23111a28'/>
+      <circle cx='156' cy='380' r='32' fill='%231a2a40'/>
+      <circle cx='156' cy='380' r='20' fill='url(%23silver)'/>
+      <circle cx='156' cy='380' r='8' fill='%230a1628'/>
+      <!-- 바퀴 볼트 -->
+      <circle cx='156' cy='362' r='3' fill='%23c0d0e0'/>
+      <circle cx='156' cy='398' r='3' fill='%23c0d0e0'/>
+      <circle cx='138' cy='380' r='3' fill='%23c0d0e0'/>
+      <circle cx='174' cy='380' r='3' fill='%23c0d0e0'/>
+
       <!-- 뒷 바퀴 -->
-      <circle cx='352' cy='378' r='40' fill='%23222'/>
-      <circle cx='352' cy='378' r='28' fill='%23444'/>
-      <circle cx='352' cy='378' r='14' fill='url(%23gold)'/>
-      <!-- 헤드라이트 -->
-      <ellipse cx='94' cy='268' rx='10' ry='7' fill='%23fff8c0' opacity='0.9'/>
-      <!-- 텍스트 241 -->
-      <text x='256' y='460' font-family='Arial Black,sans-serif' font-weight='900' font-size='52' fill='url(%23gold)' text-anchor='middle' letter-spacing='2'>241</text>
-      <!-- 별 장식 -->
-      <text x='256' y='140' font-size='28' text-anchor='middle' fill='%23f0c040' opacity='0.7'>★</text>
+      <circle cx='358' cy='380' r='44' fill='%23111a28'/>
+      <circle cx='358' cy='380' r='32' fill='%231a2a40'/>
+      <circle cx='358' cy='380' r='20' fill='url(%23silver)'/>
+      <circle cx='358' cy='380' r='8' fill='%230a1628'/>
+      <circle cx='358' cy='362' r='3' fill='%23c0d0e0'/>
+      <circle cx='358' cy='398' r='3' fill='%23c0d0e0'/>
+      <circle cx='340' cy='380' r='3' fill='%23c0d0e0'/>
+      <circle cx='376' cy='380' r='3' fill='%23c0d0e0'/>
+
+      <!-- 번호판 -->
+      <rect x='198' y='372' width='116' height='22' rx='4' fill='%23e8f0ff' opacity='0.9'/>
+      <text x='256' y='388' font-family='Arial Black,sans-serif' font-weight='900' font-size='14'
+            fill='%230a1628' text-anchor='middle' letter-spacing='1'>241</text>
+
+      <!-- 상단 노선번호 표시판 -->
+      <rect x='140' y='108' width='232' height='34' rx='8' fill='%23081020' opacity='0.9'/>
+      <rect x='142' y='110' width='228' height='30' rx='7' fill='none' stroke='%234a90d9' stroke-width='1.5' opacity='0.7'/>
+      <text x='256' y='132' font-family='Arial Black,sans-serif' font-weight='900' font-size='20'
+            fill='url(%23accent)' text-anchor='middle' letter-spacing='3'>241</text>
+
+      <!-- 하단 텍스트 -->
+      <text x='256' y='478' font-family='Arial,sans-serif' font-weight='700' font-size='22'
+            fill='%234a90d9' text-anchor='middle' letter-spacing='1' opacity='0.85'>달력</text>
     </svg>`;
 
     const encoded = iconSvg.replace(/\n\s*/g,'');
@@ -88,13 +156,13 @@
 
     // PWA manifest
     const manifest = {
-        name: "241번 버스 순번 달력",
-        short_name: "241번달력",
+        name: "241달력",
+        short_name: "241달력",
         description: "241번 버스 기사 순번 달력",
         start_url: ".",
         display: "standalone",
-        background_color: "#1a1d27",
-        theme_color: "#1a1d27",
+        background_color: "#0a1628",
+        theme_color: "#0a1628",
         icons: [
             { src: dataUrl, sizes: "192x192", type: "image/svg+xml" },
             { src: dataUrl, sizes: "512x512", type: "image/svg+xml" }
