@@ -1849,4 +1849,288 @@ function applyBgColor(ds, color) {
     saveMemo(); renderBgColorPicker(ds); renderCalendar();
     const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
     if(cell) cell.classList.add('selected-active');
-    if(navigator.vibra
+    if(navigator.vibrate) navigator.vibrate(30);
+}
+
+function closeDayModalAnimated() {
+    const inner = document.getElementById('day-modal-inner');
+    inner.classList.add('closing');
+    inner.addEventListener('animationend', () => {
+        document.getElementById('day-modal').style.display = 'none';
+        inner.classList.remove('closing'); inner.style.transform = '';
+    }, { once: true });
+}
+function closeDayModal(e) {
+    if (e && e.target !== document.getElementById('day-modal')) return;
+    closeDayModalAnimated();
+}
+
+function applyShift(shift) {
+    if(!dayModalDate) return;
+    const ds = getFormattedDateStr(dayModalDate);
+    const rec = ensureDateRecord(ds);
+    rec.customShift = shift;
+    if(shift === '휴무' || shift === '연차') rec.bgColor = null;
+    if(shift==='자동' && rec.schedules.length===0 && !rec.bgColor) delete memoStorage[ds];
+    saveMemo();
+    const newShift = getShiftType(dayModalDate);
+    const shiftEl = document.getElementById('day-modal-current-shift');
+    shiftEl.innerText = newShift;
+    shiftEl.style.color = newShift==='오전'?'var(--am-color)':newShift==='오후'?'var(--pm-color)':newShift==='연차'?'#f59f00':'var(--holiday-color)';
+    renderCalendar(); selectDate(dayModalDate);
+    const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
+    if(cell) cell.classList.add('selected-active');
+    if(navigator.vibrate) navigator.vibrate(40);
+}
+
+function getScheduleTitle(s) { return typeof s === 'string' ? s : s.title || ''; }
+function getScheduleMemo(s) { return typeof s === 'string' ? '' : s.memo || ''; }
+
+function renderPopupScheduleList(ds) {
+    const cont = document.getElementById('popup-schedule-list');
+    if(!cont) return;
+    cont.innerHTML='';
+    const rec = memoStorage[ds];
+    const schedules = (rec&&rec.schedules)?rec.schedules:[];
+    if(!schedules.length){ cont.innerHTML='<div class="popup-no-schedule">등록된 일정이 없습니다</div>'; return; }
+    schedules.forEach((s,idx)=>{
+        const title = getScheduleTitle(s), memo = getScheduleMemo(s);
+        const wrap = document.createElement('div');
+        wrap.className = 'popup-schedule-item'; wrap.style.flexDirection='column'; wrap.style.alignItems='stretch'; wrap.style.gap='5px';
+        const titleRow = document.createElement('div'); titleRow.style.cssText='display:flex;align-items:center;gap:7px;';
+        const t = document.createElement('span'); t.className='popup-schedule-item-text'; t.innerText=title; t.style.fontWeight='700';
+        const d = document.createElement('button'); d.className='popup-schedule-item-del'; d.innerText='✕';
+        d.onclick=()=>deleteScheduleItem(ds,idx);
+        titleRow.appendChild(t); titleRow.appendChild(d);
+        const memoInput = document.createElement('input');
+        memoInput.type='text'; memoInput.placeholder='메모 입력...'; memoInput.value=memo;
+        memoInput.style.cssText='width:100%;padding:5px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-family:inherit;outline:none;-webkit-user-select:text;user-select:text;box-sizing:border-box;';
+        memoInput.addEventListener('change', ()=>{
+            const rec2 = memoStorage[ds]; if(!rec2||!rec2.schedules) return;
+            const item = rec2.schedules[idx];
+            if(typeof item === 'string') rec2.schedules[idx] = {title: item, memo: memoInput.value.trim()};
+            else item.memo = memoInput.value.trim();
+            saveMemo(); renderBottomScheduleList(ds);
+        });
+        wrap.appendChild(titleRow); wrap.appendChild(memoInput);
+        cont.appendChild(wrap);
+    });
+}
+
+function deleteScheduleItem(ds, idx) {
+    const rec = memoStorage[ds]; if(!rec||!rec.schedules) return;
+    rec.schedules.splice(idx,1);
+    if(rec.schedules.length===0 && (!rec.customShift||rec.customShift==='자동') && !rec.bgColor) delete memoStorage[ds];
+    saveMemo(); renderPopupScheduleList(ds); renderBottomScheduleList(ds); renderCalendar();
+    renderMonthlyScheduleList(currentDate.getFullYear(), currentDate.getMonth());
+    const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
+    if(cell) cell.classList.add('selected-active');
+}
+
+function renderBottomScheduleList(ds) {
+    const cont = document.getElementById('bottom-schedule-list'); cont.innerHTML='';
+    const rec = memoStorage[ds];
+    const schedules = (rec&&rec.schedules)?rec.schedules:[];
+    const annivs = getAnniversariesForDate(ds);
+    if(!schedules.length && !annivs.length){ cont.innerHTML='<div class="no-schedule">등록된 일정이 없습니다</div>'; return; }
+    annivs.forEach(a=>{
+        const item=document.createElement('div'); item.className='schedule-item';
+        item.style.cssText='display:flex;align-items:center;gap:6px;border-left-color:#cc5de8;';
+        const t=document.createElement('span');
+        t.style.cssText='font-weight:700;font-size:13px;color:#cc5de8;flex-shrink:0;';
+        t.innerText=(a.yearly?'🔁 ':'📌 ')+a.title;
+        item.appendChild(t); cont.appendChild(item);
+    });
+    schedules.forEach((s,idx)=>{
+        const title = getScheduleTitle(s), memo = getScheduleMemo(s);
+        const item = document.createElement('div'); item.className='schedule-item';
+        item.style.cssText='display:flex;align-items:center;gap:5px;flex-wrap:nowrap;';
+        const t = document.createElement('span');
+        t.style.cssText='font-weight:700;font-size:13px;color:var(--schedule-color);flex-shrink:0;white-space:nowrap;';
+        t.innerText=title; item.appendChild(t);
+        const sep=document.createElement('span');
+        sep.style.cssText='color:var(--schedule-color);flex-shrink:0;opacity:0.5;';
+        sep.innerText='·'; item.appendChild(sep);
+        const inp=document.createElement('input'); inp.type='text'; inp.value=memo; inp.placeholder='메모...';
+        inp.style.cssText='flex:1;min-width:0;background:transparent;border:none;outline:none;font-size:13px;color:var(--schedule-color);font-family:inherit;-webkit-user-select:text;user-select:text;padding:0;';
+        inp.addEventListener('change',()=>{
+            const r2=memoStorage[ds]; if(!r2||!r2.schedules)return;
+            r2.schedules[idx]={title:getScheduleTitle(r2.schedules[idx]),memo:inp.value.trim()};
+            saveMemo(); renderPopupScheduleList(ds);
+        });
+        item.appendChild(inp);
+        const del=document.createElement('button');
+        del.style.cssText='background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;line-height:1;';
+        del.innerText='✕'; del.onclick=()=>{ deleteScheduleItem(ds,idx); };
+        item.appendChild(del);
+        cont.appendChild(item);
+    });
+}
+
+function addBottomSchedule() {
+    if(!selectedDate) return;
+    const ds = getFormattedDateStr(selectedDate);
+    const input = document.getElementById('bottom-schedule-input');
+    const text = input.value.trim(); if(!text) return;
+    const rec = ensureDateRecord(ds);
+    rec.schedules.push({title: text, memo: ''});
+    saveMemo(); input.value='';
+    renderBottomScheduleList(ds); renderCalendar();
+    renderMonthlyScheduleList(currentDate.getFullYear(), currentDate.getMonth());
+}
+
+function selectDate(date) {
+    const prev=document.querySelector('.day-cell.selected-active');
+    if(prev) prev.classList.remove('selected-active');
+    selectedDate=date; selectedDateStr=getFormattedDateStr(date);
+    const cell=document.querySelector(`.day-cell[data-date="${selectedDateStr}"]`);
+    if(cell) cell.classList.add('selected-active');
+    const days=['일','월','화','수','목','금','토'];
+    document.getElementById('selected-date-title').innerText=
+        `${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일 (${days[date.getDay()]}요일)`;
+    document.getElementById('info-turn').innerText=calculateTurn(date);
+    const inlineWrap = document.getElementById('bottom-inline-input');
+    if(inlineWrap) { inlineWrap.style.display='flex'; document.getElementById('bottom-schedule-input').value=''; }
+    renderBottomScheduleList(selectedDateStr);
+}
+
+let popupTurnValue = 1;
+
+function renderPopupTurnSection(date) {
+    if(!date) return;
+    const ds = getFormattedDateStr(date);
+    const rec = memoStorage[ds];
+    const isCustom = rec && rec.customTurn;
+    const turn = calculateTurn(date);
+    popupTurnValue = turn;
+    const input = document.getElementById('popup-turn-input');
+    input.value = turn;
+    const badge = document.getElementById('popup-turn-auto-badge');
+    badge.innerText = isCustom ? '(직접 설정됨)' : '(자동 계산 중)';
+    badge.style.color = isCustom ? 'var(--bus-pink)' : 'var(--text-sub)';
+}
+
+function adjustPopupTurn(delta) {
+    const input = document.getElementById('popup-turn-input');
+    let v = parseInt(input.value) || popupTurnValue;
+    v = Math.min(TOTAL_TURNS, Math.max(1, v + delta));
+    input.value = v; popupTurnValue = v;
+}
+
+function applyPopupTurn() {
+    if(!dayModalDate) return;
+    const input = document.getElementById('popup-turn-input');
+    const val = parseInt(input.value);
+    if(isNaN(val) || val < 1 || val > TOTAL_TURNS) return;
+    const ds = getFormattedDateStr(dayModalDate);
+    const rec = ensureDateRecord(ds);
+    rec.customTurn = val; popupTurnValue = val;
+    saveMemo();
+    document.getElementById('popup-turn-auto-badge').innerText = '(직접 설정됨)';
+    document.getElementById('popup-turn-auto-badge').style.color = 'var(--bus-pink)';
+    document.getElementById('info-turn').innerText = val;
+    renderCalendar();
+    const cell=document.querySelector(`.day-cell[data-date="${ds}"]`);
+    if(cell) cell.classList.add('selected-active');
+    if(navigator.vibrate) navigator.vibrate(40);
+}
+
+function applyPopupTurnAndClose() {
+    applyPopupTurn(); closeDayModalAnimated();
+}
+
+function getLunarDate(year, month, day) {
+    function toJD(y,m,d){
+        if(m<=2){y--;m+=12;}
+        const A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+        return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;
+    }
+    const jd = toJD(year, month, day);
+    const synodicMonth = 29.53058868;
+    const baseJD = 2451549.5, baseL = {y:2000, m:1, d:1};
+    const diff = jd - baseJD;
+    const monthsElapsed = diff / synodicMonth;
+    let lm = Math.floor(monthsElapsed);
+    let ld = Math.round((monthsElapsed - lm) * synodicMonth) + 1;
+    if(ld > 29) { lm++; ld -= 29; }
+    let ly = baseL.y + Math.floor(lm / 12);
+    let lmonth = baseL.m + (lm % 12);
+    if(lmonth > 12){ lmonth -= 12; ly++; }
+    if(lmonth < 1){ lmonth += 12; ly--; }
+    return { y: ly, m: lmonth, d: ld };
+}
+
+let anniversaries = JSON.parse(localStorage.getItem('bus_anniversaries') || '[]');
+function saveAnniversaries() { localStorage.setItem('bus_anniversaries', JSON.stringify(anniversaries)); }
+
+function getAnniversariesForDate(ds) {
+    const [y,m,d] = ds.split('-').map(Number);
+    return anniversaries.filter(a => {
+        if(a.yearly) return a.month===m && a.day===d;
+        return a.year===y && a.month===m && a.day===d;
+    });
+}
+
+function addAnniversary() {
+    if(!dayModalDate) return;
+    const input = document.getElementById('popup-anniv-input');
+    const text = input.value.trim(); if(!text) return;
+    const yearly = document.getElementById('popup-anniv-yearly').checked;
+    const y = dayModalDate.getFullYear(), m = dayModalDate.getMonth()+1, d = dayModalDate.getDate();
+    anniversaries.push({ title: text, year: y, month: m, day: d, yearly });
+    saveAnniversaries(); input.value='';
+    renderPopupAnnivList(); renderCalendar();
+    renderMonthlyScheduleList(currentDate.getFullYear(), currentDate.getMonth());
+    if(selectedDate) selectDate(selectedDate);
+}
+
+function renderPopupAnnivList() {
+    if(!dayModalDate) return;
+    const ds = getFormattedDateStr(dayModalDate);
+    const [y,m,d] = ds.split('-').map(Number);
+    const cont = document.getElementById('popup-anniv-list'); cont.innerHTML='';
+    const list = getAnniversariesForDate(ds);
+    if(!list.length){ cont.innerHTML='<div class="popup-no-schedule">등록된 기념일이 없습니다</div>'; return; }
+    anniversaries.forEach((a, idx)=>{
+        const match = a.yearly ? (a.month===m && a.day===d) : (a.year===y && a.month===m && a.day===d);
+        if(!match) return;
+        const item = document.createElement('div'); item.className='popup-schedule-item';
+        const t = document.createElement('span'); t.className='popup-schedule-item-text';
+        t.innerText = (a.yearly?'🔁 ':'📌 ') + a.title;
+        const del = document.createElement('button'); del.className='popup-schedule-item-del'; del.innerText='✕';
+        del.onclick = ()=>{
+            anniversaries.splice(idx,1); saveAnniversaries(); renderPopupAnnivList(); renderCalendar();
+            renderMonthlyScheduleList(currentDate.getFullYear(), currentDate.getMonth());
+            if(selectedDate)selectDate(selectedDate);
+        };
+        item.appendChild(t); item.appendChild(del); cont.appendChild(item);
+    });
+}
+
+function initSwipeFeature() {
+    let sx=0;
+    const cal=document.getElementById('calendar-days'); if(!cal) return;
+    cal.addEventListener('touchstart',e=>{sx=e.changedTouches[0].screenX;},{passive:true});
+    cal.addEventListener('touchend',e=>{
+        const dx=e.changedTouches[0].screenX-sx;
+        if(Math.abs(dx)>80) changeMonth(dx>0?-1:1);
+    },{passive:true});
+
+    const inner = document.getElementById('day-modal-inner');
+    const handle = inner.querySelector('.drag-handle');
+    let dragStartY=0, dragging=false;
+    function onDragStart(y){ dragStartY=y; dragging=true; inner.style.transition='none'; }
+    function onDragMove(y){ if(!dragging) return; const dy=Math.max(0,y-dragStartY); inner.style.transform=`translateY(${dy}px)`; }
+    function onDragEnd(y){ if(!dragging) return; dragging=false; inner.style.transition=''; const dy=Math.max(0,y-dragStartY); if(dy>80) closeDayModalAnimated(); else inner.style.transform=''; }
+    handle.addEventListener('touchstart',e=>{e.stopPropagation();onDragStart(e.touches[0].clientY);},{passive:true});
+    handle.addEventListener('touchmove',e=>{e.stopPropagation();onDragMove(e.touches[0].clientY);},{passive:true});
+    handle.addEventListener('touchend',e=>{onDragEnd(e.changedTouches[0].clientY);},{passive:true});
+    handle.addEventListener('mousedown',e=>{e.stopPropagation();onDragStart(e.clientY);
+        const mm=ev=>onDragMove(ev.clientY);
+        const mu=ev=>{onDragEnd(ev.clientY);document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+        document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
+    });
+}
+</script>
+</body>
+</html>
