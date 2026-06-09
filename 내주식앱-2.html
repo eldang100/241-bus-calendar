@@ -25,6 +25,7 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif
 .tab-btn.hot.active{background:linear-gradient(135deg,#7c3aed,#f59e0b);color:#fff}
 .tab-btn.news.active{background:linear-gradient(135deg,#0f4c75,#1b6ca8);color:#fff}
 .tab-btn.ai.active{background:linear-gradient(135deg,#3b1f6e,#6d3fa8);color:#fff}
+.tab-btn.fng.active{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff}
 .tab-btn .badge{position:absolute;top:4px;right:calc(50% - 16px);width:7px;height:7px;background:#f87171;border-radius:50%;animation:pulse 1.5s infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
@@ -54,11 +55,39 @@ button{-webkit-appearance:none}
         <span class="live-dot"></span><span style="font-size:10px;color:#34d399;font-weight:700" id="last-update">연결 중...</span>
       </div>
     </div>
+    <!-- 공포탐욕 지수 배너 -->
+    <div id="fng-bar" style="margin:0 14px 10px;border-radius:12px;padding:10px 14px;background:#1e2438;border:1px solid #2d3550;cursor:pointer" onclick="switchTab('fng')">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:9px;color:#6b7a9e;font-weight:700;letter-spacing:1px;margin-bottom:3px">KOSPI 공포·탐욕 지수</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="fng-score" style="font-size:22px;font-weight:900;color:#94a3b8">--</span>
+            <span id="fng-label" style="font-size:12px;font-weight:700;color:#94a3b8;padding:2px 10px;border-radius:20px;background:rgba(148,163,184,0.1)">로딩중...</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div id="fng-gauge" style="width:80px;height:40px"></div>
+          <div style="font-size:9px;color:#4a5568;margin-top:2px">탭하여 상세보기</div>
+        </div>
+      </div>
+      <!-- 게이지 바 -->
+      <div style="margin-top:8px;height:6px;background:#2d3550;border-radius:3px;overflow:hidden">
+        <div id="fng-progress" style="height:100%;width:50%;background:#94a3b8;border-radius:3px;transition:all 1s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px">
+        <span style="font-size:8px;color:#f87171">극도공포</span>
+        <span style="font-size:8px;color:#fb923c">공포</span>
+        <span style="font-size:8px;color:#94a3b8">중립</span>
+        <span style="font-size:8px;color:#60a5fa">탐욕</span>
+        <span style="font-size:8px;color:#34d399">극도탐욕</span>
+      </div>
+    </div>
     <div id="top-tabs" style="display:flex;gap:2px;padding:0 14px">
-      <button class="tab-btn active" data-tab="watchlist" onclick="switchTab('watchlist')">⭐ 관심종목</button>
-      <button class="tab-btn hot" data-tab="hot" onclick="switchTab('hot')">🔥 급등섹터</button>
+      <button class="tab-btn active" data-tab="watchlist" onclick="switchTab('watchlist')">⭐ 관심</button>
+      <button class="tab-btn hot" data-tab="hot" onclick="switchTab('hot')">🔥 급등</button>
+      <button class="tab-btn fng" data-tab="fng" onclick="switchTab('fng')">😱 공포탐욕</button>
       <button class="tab-btn news" data-tab="news" onclick="switchTab('news')">📰 뉴스<span class="badge" id="news-badge"></span></button>
-      <button class="tab-btn ai" data-tab="ai" onclick="switchTab('ai')">🤖 AI분석</button>
+      <button class="tab-btn ai" data-tab="ai" onclick="switchTab('ai')">🤖 AI</button>
     </div>
   </div>
   <div id="tab-content"></div>
@@ -219,18 +248,90 @@ function tickSupply() {
 tickSupply();
 fetchRealPrices(Object.keys(STOCKS)).then(()=>render());
 
-// 20초마다 실시간 갱신 (KIS API 호출 제한 고려)
+// 3분마다 실시간 갱신 (토큰 알림 최소화)
 setInterval(async () => {
   await fetchRealPrices(state.watchlist.length > 0 ? state.watchlist : Object.keys(STOCKS));
   tickSupply();
   render();
-  // 헤더 시간 업데이트
   const el = document.getElementById("last-update");
   if(el && state.lastFetchTime) el.textContent = `${state.lastFetchTime.getHours()}:${String(state.lastFetchTime.getMinutes()).padStart(2,"0")}:${String(state.lastFetchTime.getSeconds()).padStart(2,"0")} 갱신`;
-}, 20000);
+}, 180000);
 
 // 수급만 5초마다 갱신
 setInterval(()=>{ tickSupply(); render(); }, 5000);
+
+// ── 공포·탐욕 지수 ─────────────────────────────────────────────────────────
+let fngState = {
+  score: null, label: "", color: "#94a3b8", detail: "", loading: false,
+  factors: [], lastFetch: null,
+};
+
+function getFngColor(score) {
+  if(score <= 20) return { color:"#f87171", bg:"rgba(248,113,113,0.12)", label:"극도의 공포", emoji:"😱" };
+  if(score <= 40) return { color:"#fb923c", bg:"rgba(251,146,60,0.10)",  label:"공포",       emoji:"😨" };
+  if(score <= 60) return { color:"#fbbf24", bg:"rgba(251,191,36,0.10)",  label:"중립",       emoji:"😐" };
+  if(score <= 80) return { color:"#60a5fa", bg:"rgba(96,165,250,0.10)",  label:"탐욕",       emoji:"😏" };
+  return                 { color:"#34d399", bg:"rgba(52,211,153,0.12)",  label:"극도의 탐욕", emoji:"🤑" };
+}
+
+async function fetchFng() {
+  fngState.loading = true;
+  updateFngBar();
+  const today = new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"});
+  try {
+    const res = await fetch(API, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:800,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages:[{role:"user", content:
+`오늘(${today}) KOSPI 시장의 공포·탐욕 지수를 분석해서 아래 JSON만 반환하세요(마크다운 없이):
+{
+  "score": 0~100 사이 숫자,
+  "label": "극도의공포|공포|중립|탐욕|극도의탐욕",
+  "summary": "2문장 이내 현재 시장 심리 요약",
+  "factors": [
+    {"name":"변동성(VIX)","value":"수치 또는 상태","signal":"공포|중립|탐욕"},
+    {"name":"거래량","value":"수치 또는 상태","signal":"공포|중립|탐욕"},
+    {"name":"외국인수급","value":"수치 또는 상태","signal":"공포|중립|탐욕"},
+    {"name":"시장모멘텀","value":"수치 또는 상태","signal":"공포|중립|탐욕"},
+    {"name":"투자심리","value":"수치 또는 상태","signal":"공포|중립|탐욕"}
+  ]
+}`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.filter(b=>b.type==="text").map(b=>b.text).join("") || "{}";
+    const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    fngState.score   = parsed.score || 50;
+    fngState.summary = parsed.summary || "";
+    fngState.factors = parsed.factors || [];
+    fngState.lastFetch = new Date();
+  } catch(e) {
+    fngState.score = 50; fngState.summary = "데이터를 불러오지 못했습니다.";
+  }
+  fngState.loading = false;
+  updateFngBar();
+  if(state.tab === "fng") render();
+}
+
+function updateFngBar() {
+  const score = fngState.score;
+  if(score === null) return;
+  const cfg = getFngColor(score);
+  const scoreEl = document.getElementById("fng-score");
+  const labelEl = document.getElementById("fng-label");
+  const progEl  = document.getElementById("fng-progress");
+  if(scoreEl) scoreEl.textContent = fngState.loading ? "--" : score;
+  if(scoreEl) scoreEl.style.color = cfg.color;
+  if(labelEl) { labelEl.textContent = fngState.loading ? "분석중..." : `${cfg.emoji} ${cfg.label}`; labelEl.style.color = cfg.color; labelEl.style.background = cfg.bg; }
+  if(progEl)  { progEl.style.width = `${score}%`; progEl.style.background = cfg.color; }
+}
+
+// 앱 시작시 공포탐욕 자동 로드
+fetchFng();
+// 1시간마다 갱신
+setInterval(fetchFng, 3600000);
 
 // ── SVG Chart ─────────────────────────────────────────────────────────────
 function svgChart(candles,levels,currentPrice,rsiValues){
@@ -386,7 +487,69 @@ function switchTab(tab){
   state.tab=tab;
   document.querySelectorAll(".tab-btn").forEach(b=>{b.classList.toggle("active",b.dataset.tab===tab);});
   if(tab==="news"&&state.newsItems.length===0&&!state.newsLoading)fetchNews();
+  if(tab==="fng"&&!fngState.score&&!fngState.loading)fetchFng();
   render();
+}
+
+function renderFng(){
+  const score=fngState.score, cfg=score!==null?getFngColor(score):{color:"#94a3b8",bg:"rgba(148,163,184,0.1)",label:"로딩중",emoji:"⏳"};
+  let h=`<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-weight:800;font-size:15px">😱 공포·탐욕 지수</div>
+    <button onclick="fetchFng()" style="padding:6px 14px;background:#242b40;border:1px solid #2d3550;border-radius:10px;color:#4a7cdc;font-size:11px;font-weight:700;cursor:pointer">${fngState.loading?"분석중...":"🔄 갱신"}</button>
+  </div>`;
+
+  if(fngState.loading&&!score){
+    h+=`<div style="background:#242b40;border-radius:16px;padding:36px;text-align:center;border:1px solid #2d3550">
+      <div style="font-size:36px;margin-bottom:14px;display:inline-block;animation:spin 1.2s linear infinite">⚙️</div>
+      <div style="color:#4a7cdc;font-weight:700;font-size:15px;margin-bottom:6px">시장 심리 분석 중</div>
+      <div style="color:#6b7a9e;font-size:12px">오늘의 KOSPI 공포·탐욕 지수를<br>실시간으로 계산하고 있어요</div>
+    </div>`;
+    return h;
+  }
+
+  // 메인 게이지 카드
+  h+=`<div style="background:${cfg.bg};border:2px solid ${cfg.color}44;border-radius:20px;padding:24px;margin-bottom:12px;text-align:center">
+    <div style="font-size:13px;color:${cfg.color};font-weight:700;letter-spacing:1px;margin-bottom:8px">KOSPI 공포·탐욕 지수</div>
+    <div style="font-size:72px;font-weight:900;color:${cfg.color};line-height:1;margin-bottom:6px">${score??'--'}</div>
+    <div style="font-size:20px;font-weight:800;color:${cfg.color};margin-bottom:16px">${cfg.emoji} ${cfg.label}</div>
+    <!-- 게이지 바 -->
+    <div style="height:12px;background:#2d3550;border-radius:6px;overflow:hidden;margin-bottom:6px">
+      <div style="height:100%;width:${score}%;background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#60a5fa,#34d399);border-radius:6px;transition:width 1s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:#4a5568;margin-bottom:14px">
+      <span>0<br>극도공포</span><span>25<br>공포</span><span>50<br>중립</span><span>75<br>탐욕</span><span>100<br>극도탐욕</span>
+    </div>
+    <div style="font-size:13px;color:#c8d4e8;line-height:1.7;text-align:left;background:#1a1f2e;border-radius:10px;padding:12px">${fngState.summary||""}</div>
+    ${fngState.lastFetch?`<div style="font-size:10px;color:#4a5568;margin-top:8px">${fngState.lastFetch.getHours()}:${String(fngState.lastFetch.getMinutes()).padStart(2,"0")} 기준</div>`:""}
+  </div>`;
+
+  // 구성 요소별 지표
+  if(fngState.factors&&fngState.factors.length>0){
+    h+=`<div style="background:#242b40;border-radius:14px;padding:14px;border:1px solid #2d3550;margin-bottom:12px">
+      <div style="font-size:11px;color:#4a7cdc;font-weight:700;letter-spacing:1px;margin-bottom:12px">📊 구성 지표별 분석</div>`;
+    fngState.factors.forEach(f=>{
+      const fc=f.signal==="탐욕"?"#34d399":f.signal==="공포"?"#f87171":"#fbbf24";
+      const fbg=f.signal==="탐욕"?"rgba(52,211,153,0.08)":f.signal==="공포"?"rgba(248,113,113,0.08)":"rgba(251,191,36,0.08)";
+      h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:${fbg};border-radius:10px;margin-bottom:6px;border:1px solid ${fc}33">
+        <div><div style="font-size:12px;font-weight:700;color:#e8ecf4">${f.name}</div><div style="font-size:11px;color:#6b7a9e;margin-top:1px">${f.value}</div></div>
+        <span style="font-size:10px;font-weight:700;color:${fc};padding:3px 10px;border-radius:20px;background:${fbg};border:1px solid ${fc}44">${f.signal}</span>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+
+  // 투자 전략 힌트
+  const hint = score<=20?"📢 극도의 공포 구간 — 역사적으로 매수 기회인 경우가 많아요. 분할매수 전략 고려":
+               score<=40?"⚠️ 공포 구간 — 시장이 과도하게 하락했을 수 있어요. 우량주 저점 매수 검토":
+               score<=60?"⚖️ 중립 구간 — 방향성이 불명확해요. 관망하거나 분산 투자 유지":
+               score<=80?"💡 탐욕 구간 — 과열 징조가 있어요. 차익실현 또는 신규매수 자제":
+               "🚨 극도의 탐욕 구간 — 버블 위험 높아요. 보유 비중 축소 고려";
+  h+=`<div style="background:#242b40;border-radius:12px;padding:14px;border:1px solid ${cfg.color}33">
+    <div style="font-size:11px;color:${cfg.color};font-weight:700;margin-bottom:6px">💬 투자 참고 전략</div>
+    <div style="font-size:13px;color:#c8d4e8;line-height:1.7">${hint}</div>
+    <div style="font-size:10px;color:#4a5568;margin-top:10px">⚠️ 투자 참고용입니다. 실제 투자 결정은 본인 판단으로.</div>
+  </div>`;
+  return h;
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────
@@ -408,6 +571,7 @@ function render(){
   const el=document.getElementById("tab-content");
   if(state.tab==="watchlist")el.innerHTML=renderWatchlist();
   else if(state.tab==="hot")el.innerHTML=renderHot();
+  else if(state.tab==="fng")el.innerHTML=renderFng();
   else if(state.tab==="news")el.innerHTML=renderNews();
   else if(state.tab==="ai")el.innerHTML=renderAITab();
   // Re-bind dynamic events
