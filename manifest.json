@@ -2,7 +2,7 @@
   "name": "MY STOCK",
   "short_name": "MY STOCK",
   "description": "KRX 실시간 주식 트래커",
-  "start_url": "/241-bus-calendar/내주식앱_2.html",
+  "start_url": "/241-bus-calendar/stock.html",
   "scope": "/241-bus-calendar/",
   "display": "standalone",
   "orientation": "portrait",
