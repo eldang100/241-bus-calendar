@@ -2869,24 +2869,36 @@ function applyPopupTurnAndClose() {
 }
 
 function getLunarDate(year, month, day) {
-    function toJD(y,m,d){
-        if(m<=2){y--;m+=12;}
-        const A=Math.floor(y/100), B=2-A+Math.floor(A/4);
-        return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;
+    // 음력 월 시작일 (양력) - 한국천문연구원 기준
+    const monthStarts = {
+        2024: ['2024-02-10','2024-03-10','2024-04-09','2024-05-08','2024-06-06','2024-07-06','2024-08-04','2024-09-03','2024-10-03','2024-11-01','2024-12-01','2024-12-31'],
+        2025: ['2025-01-29','2025-02-28','2025-03-29','2025-04-28','2025-05-27','2025-06-25','2025-07-25','2025-08-23','2025-09-22','2025-10-21','2025-11-20','2025-12-20'],
+        2026: ['2026-02-17','2026-03-18','2026-04-17','2026-05-17','2026-06-15','2026-07-14','2026-08-12','2026-09-11','2026-10-10','2026-11-09','2026-12-09','2027-01-07'],
+        2027: ['2027-02-06','2027-03-08','2027-04-06','2027-05-06','2027-06-04','2027-07-04','2027-08-02','2027-09-01','2027-09-30','2027-10-30','2027-11-28','2027-12-28'],
+    };
+
+    const td = new Date(year, month-1, day);
+
+    // 해당 연도와 인접 연도에서 월 시작일 배열 구성
+    const allStarts = [];
+    for (let y = year-1; y <= year+1; y++) {
+        if (monthStarts[y]) {
+            monthStarts[y].forEach((ds, i) => {
+                allStarts.push({ date: new Date(ds), lunarYear: y, lunarMonth: i+1 });
+            });
+        }
     }
-    const jd = toJD(year, month, day);
-    const synodicMonth = 29.53058868;
-    const baseJD = 2451549.5, baseL = {y:2000, m:1, d:1};
-    const diff = jd - baseJD;
-    const monthsElapsed = diff / synodicMonth;
-    let lm = Math.floor(monthsElapsed);
-    let ld = Math.round((monthsElapsed - lm) * synodicMonth) + 1;
-    if(ld > 29) { lm++; ld -= 29; }
-    let ly = baseL.y + Math.floor(lm / 12);
-    let lmonth = baseL.m + (lm % 12);
-    if(lmonth > 12){ lmonth -= 12; ly++; }
-    if(lmonth < 1){ lmonth += 12; ly--; }
-    return { y: ly, m: lmonth, d: ld };
+    allStarts.sort((a,b) => a.date - b.date);
+
+    let result = { y: year, m: 1, d: 1 };
+    for (let i = allStarts.length-1; i >= 0; i--) {
+        if (td >= allStarts[i].date) {
+            const diff = Math.round((td - allStarts[i].date) / 86400000);
+            result = { y: allStarts[i].lunarYear, m: allStarts[i].lunarMonth, d: diff+1 };
+            break;
+        }
+    }
+    return result;
 }
 
 let anniversaries = JSON.parse(localStorage.getItem('bus_anniversaries') || '[]');
