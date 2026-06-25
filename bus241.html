@@ -176,13 +176,27 @@
     // Service Worker
     if('serviceWorker' in navigator) {
         const swCode = `
+const CACHE = 'bus241-v3';
 self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-self.addEventListener('fetch', e => e.respondWith(
-    caches.open('bus241-v2').then(cache =>
-        cache.match(e.request).then(res => res || fetch(e.request).then(r => { cache.put(e.request, r.clone()); return r; }).catch(() => res))
-    )
-));`;
+self.addEventListener('activate', e => e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => clients.claim())
+));
+self.addEventListener('fetch', e => {
+    const req = e.request;
+    const isDoc = req.mode === 'navigate' || (req.destination === 'document') || /\\.html(\\?|$)/.test(req.url);
+    if(isDoc) {
+        e.respondWith(
+            fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(req, c)); return r; })
+            .catch(() => caches.open(CACHE).then(cache => cache.match(req)))
+        );
+    } else {
+        e.respondWith(
+            caches.open(CACHE).then(cache =>
+                cache.match(req).then(res => res || fetch(req).then(r => { cache.put(req, r.clone()); return r; }).catch(() => res))
+            )
+        );
+    }
+});`;
         const swBlob = new Blob([swCode], {type:'application/javascript'});
         const swUrl = URL.createObjectURL(swBlob);
         navigator.serviceWorker.register(swUrl).catch(()=>{});
