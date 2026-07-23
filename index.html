@@ -176,16 +176,43 @@
     // Service Worker
     if('serviceWorker' in navigator) {
         const swCode = `
+const CACHE = 'bus241-v3';
 self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-self.addEventListener('fetch', e => e.respondWith(
-    caches.open('bus241-v2').then(cache =>
-        cache.match(e.request).then(res => res || fetch(e.request).then(r => { cache.put(e.request, r.clone()); return r; }).catch(() => res))
-    )
-));`;
+self.addEventListener('activate', e => e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => clients.claim())
+));
+self.addEventListener('fetch', e => {
+    const req = e.request;
+    const isDoc = req.mode === 'navigate' || (req.destination === 'document') || /\\.html(\\?|$)/.test(req.url);
+    if(isDoc) {
+        e.respondWith(
+            fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(req, c)); return r; })
+            .catch(() => caches.open(CACHE).then(cache => cache.match(req)))
+        );
+    } else {
+        e.respondWith(
+            caches.open(CACHE).then(cache =>
+                cache.match(req).then(res => res || fetch(req).then(r => { cache.put(req, r.clone()); return r; }).catch(() => res))
+            )
+        );
+    }
+});`;
         const swBlob = new Blob([swCode], {type:'application/javascript'});
         const swUrl = URL.createObjectURL(swBlob);
         navigator.serviceWorker.register(swUrl).catch(()=>{});
+
+        // 옛 캐시 강제 정리: 저장된 버전과 다르면 캐시 전부 비우고 1회 새로고침
+        const APP_VER = 'bus241-2026-06-25b';
+        if(localStorage.getItem('__app_ver') !== APP_VER) {
+            if('caches' in window) {
+                caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+                    localStorage.setItem('__app_ver', APP_VER);
+                    location.reload();
+                });
+            } else {
+                localStorage.setItem('__app_ver', APP_VER);
+            }
+        }
     }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -438,15 +465,15 @@ self.addEventListener('fetch', e => e.respondWith(
         .turn-label { font-size: 11px; color: var(--text-sub); }
         .turn-value { font-size: 22px; color: var(--bus-pink); }
         .turn-unit { font-size: 12px; color: var(--text-sub); }
-        .detail-hint { font-size: 10.5px; color: var(--text-sub); text-align: center; padding: 2px 0 2px; font-weight: 400; border-bottom: 1px solid var(--border-color); }
-        .detail-schedule-area { padding: 3px 14px 4px; }
+        .detail-hint { font-size: 10.5px; color: var(--text-sub); text-align: center; padding: 4px 0 3px; font-weight: 400; border-bottom: 1px solid var(--border-color); }
+        .detail-schedule-area { padding: 4px 14px 6px; }
         .detail-schedule-title { display:none; }
         .schedule-list { display: flex; flex-direction: column; gap: 4px; }
         .schedule-item { display: flex; align-items: center; gap: 8px; background: var(--bg-weekday); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--text-main); font-weight: 400; border-left: 3px solid var(--schedule-color); }
         .schedule-item-text { flex: 1; line-height: 1.4; }
         .no-schedule { font-size: 12px; color: var(--text-sub); padding: 2px 0; font-weight: 400; }
 
-        .month-stats-box { margin: 0 14px 4px; font-size: 12px; color: var(--text-main); background: var(--bg-body); padding: 4px 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
+        .month-stats-box { margin: 0 14px 6px; font-size: 13px; color: var(--text-main); background: var(--bg-body); padding: 5px 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
 
         /* ── 하단 탭 영역 (법정공휴일 + 일정버튼) ── */
         .bottom-tabs-wrap {
@@ -809,15 +836,21 @@ self.addEventListener('fetch', e => e.respondWith(
                     <div class="no-holiday">공휴일 없음</div>
                 </div>
             </div>
-            <!-- 밴드가기 + 일정보기 버튼 -->
+            <!-- 잔여연차 + 밴드가기 + 일정보기 버튼 -->
             <div style="display:flex;gap:0px;align-items:flex-end;">
-                <div class="sched-view-btn-wrap" onclick="openNaverBand()" style="padding:4px 4px;">
+                <div class="sched-view-btn-wrap" onclick="openAnnualLeaveModal()" style="padding:4px 1px;">
+                    <div class="sched-view-btn" style="background:linear-gradient(135deg,#e67700,#f59f00);box-shadow:0 2px 8px rgba(245,159,0,0.4);">
+                        <div id="annual-leave-display" style="font-weight:900;color:#fff;line-height:1;font-size:18px;">-</div>
+                    </div>
+                    <div class="sched-view-btn-label">잔여연차</div>
+                </div>
+                <div class="sched-view-btn-wrap" onclick="openNaverBand()" style="padding:4px 1px;">
                     <div class="sched-view-btn" style="background:linear-gradient(135deg,#00c73c,#009e2e);box-shadow:0 2px 8px rgba(0,180,60,0.35);">
                         <span style="font-size:20px;line-height:1;">📣</span>
                     </div>
                     <div class="sched-view-btn-label">밴드가기</div>
                 </div>
-                <div class="sched-view-btn-wrap" onclick="openSchedViewer()" style="padding:4px 4px;">
+                <div class="sched-view-btn-wrap" onclick="openSchedViewer()" style="padding:4px 1px;">
                     <div class="sched-view-btn">
                         📋
                         <span class="sched-count-dot" id="sched-count-dot"></span>
@@ -825,6 +858,43 @@ self.addEventListener('fetch', e => e.respondWith(
                     <div class="sched-view-btn-label">일정보기</div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 연차 설정 모달 ══ -->
+<div id="annual-leave-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border-radius:16px;padding:20px;width:85%;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+        <div style="font-size:16px;font-weight:900;margin-bottom:14px;color:var(--text-main);">🏖 연차 설정</div>
+        <!-- 연차 발생일 -->
+        <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+                <div style="font-size:12px;color:var(--text-sub);">연차 발생일 <span style="color:#f59f00;">(입사일)</span></div>
+                <div id="al-tenure-display" style="font-size:12px;font-weight:700;color:#e67700;"></div>
+            </div>
+            <input type="date" id="al-start-date" class="select-input" style="width:100%;" onchange="updateTenureDisplay()">
+        </div>
+        <!-- 총갯수(왼) + 크기(오) 균등 한 줄 -->
+        <div style="margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:0;">
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;">
+                    <span style="font-size:11px;color:var(--text-sub);font-weight:700;">총갯수</span>
+                    <button onclick="changeAnnualLeaveCount(-1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">−</button>
+                    <div id="al-count-display" style="min-width:28px;text-align:center;font-size:17px;font-weight:900;color:#f59f00;">15</div>
+                    <button onclick="changeAnnualLeaveCount(1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">＋</button>
+                </div>
+                <div style="width:1px;height:24px;background:var(--border-input);margin:0 4px;flex-shrink:0;"></div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;">
+                    <span style="font-size:11px;color:var(--text-sub);font-weight:700;">크기</span>
+                    <button onclick="changeAnnualFontSize(-1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">−</button>
+                    <div id="al-fs-num-preview" style="min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#f59f00;">18pt</div>
+                    <button onclick="changeAnnualFontSize(1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">＋</button>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="closeAnnualLeaveModal()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-sub);font-size:14px;font-weight:700;cursor:pointer;">취소</button>
+            <button onclick="saveAnnualLeave()" style="flex:1;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#f59f00,#e08800);color:white;font-size:14px;font-weight:900;cursor:pointer;">💾 저장</button>
         </div>
     </div>
 </div>
@@ -975,7 +1045,7 @@ self.addEventListener('fetch', e => e.respondWith(
         <!-- 2+3 한 줄 -->
         <div style="display:flex;gap:6px;">
             <div class="setting-group" style="flex:1;">
-                <label class="setting-label">2. 기준 근무형태</label>
+                <label class="setting-label">2. 기준일 근무형태</label>
                 <select class="select-input" id="start-shift-select">
                     <option value="오전">오전 근무</option>
                     <option value="오후">오후 근무</option>
@@ -1122,6 +1192,18 @@ self.addEventListener('fetch', e => e.respondWith(
                 </div>
             </div>
         </div>
+
+            <!-- 7. 백업 / 복원 / 초기화 (전체 폭) -->
+            <div class="setting-group">
+                <label class="setting-label">7. 데이터 백업 · 복원</label>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:6px;line-height:1.3;">크롬 데이터 삭제 시 설정이 사라집니다. 가끔 백업해두면 안전합니다.</div>
+                <div style="display:flex;gap:5px;">
+                    <button onclick="exportBackup()" style="flex:1;padding:7px 2px;border-radius:6px;border:none;background:linear-gradient(135deg,#1971c2,#3b8fd9);color:#fff;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">📤 백업</button>
+                    <button onclick="document.getElementById('backup-file-input').click()" style="flex:1;padding:7px 2px;border-radius:6px;border:none;background:linear-gradient(135deg,#2f9e44,#40c057);color:#fff;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">📥 불러오기</button>
+                    <button onclick="resetAllData()" style="flex:1;padding:7px 2px;border-radius:6px;border:1px solid #e03131;background:transparent;color:#e03131;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">🗑 초기화</button>
+                </div>
+                <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
+            </div>
 
     </div>
 </div>
@@ -1340,7 +1422,7 @@ function getDepartTime(turn, date) {
     const table = BUS_SCHEDULE[tableKey];
     return table && table[turn] ? table[turn] : ['',''];
 }
-let currentDate = new Date(2026, 5, 1);
+let currentDate = (function(){ const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); })();
 let selectedDate = new Date();
 let selectedDateStr = "";
 let dayModalDate = null;
@@ -1379,6 +1461,158 @@ if (localStorage.getItem('bus_memo_storage_v5.9')) {
 
 function saveMemo() { localStorage.setItem('bus_memo_storage_v5.9', JSON.stringify(memoStorage)); }
 function saveUserSettings() { localStorage.setItem('bus_user_settings_v5.9', JSON.stringify(userSettings)); }
+
+// ── 백업 / 복원 / 초기화 ──
+const BACKUP_KEYS = ['bus_user_settings_v5.9','bus_memo_storage_v5.9','bus_anniversaries','bus_annual_leave'];
+
+function exportBackup() {
+    const data = { app: 'bus241_calendar', version: 1, exportedAt: new Date().toISOString(), data: {} };
+    BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if(v !== null) data.data[k] = v; });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date();
+    const ymd = today.getFullYear() + ('0'+(today.getMonth()+1)).slice(-2) + ('0'+today.getDate()).slice(-2);
+    a.href = url;
+    a.download = `241달력_백업_${ymd}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    if(navigator.vibrate) navigator.vibrate(40);
+    alert('백업 파일이 저장되었습니다.\n카카오톡 나에게 보내기나 구글 드라이브에 보관하면 더 안전합니다.');
+}
+
+function importBackup(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const parsed = JSON.parse(e.target.result);
+            if(!parsed.data) throw new Error('형식 오류');
+            if(!confirm('백업 파일을 불러오면 현재 설정이 모두 덮어쓰기 됩니다.\n계속할까요?')) { event.target.value=''; return; }
+            BACKUP_KEYS.forEach(k => {
+                if(parsed.data[k] !== undefined) localStorage.setItem(k, parsed.data[k]);
+            });
+            alert('복원이 완료되었습니다. 앱을 새로고침합니다.');
+            location.reload();
+        } catch(err) {
+            alert('백업 파일을 읽을 수 없습니다. 올바른 파일인지 확인해주세요.');
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function resetAllData() {
+    if(!confirm('정말 모든 데이터를 초기화할까요?\n설정·메모·연차·기념일이 전부 삭제됩니다.')) return;
+    if(!confirm('한 번 더 확인합니다.\n삭제된 데이터는 백업 파일이 없으면 복구할 수 없습니다.\n정말 초기화할까요?')) return;
+    BACKUP_KEYS.forEach(k => localStorage.removeItem(k));
+    alert('초기화되었습니다. 앱을 새로고침합니다.');
+    location.reload();
+}
+
+// ── 연차 설정 ──
+let annualLeaveSettings = JSON.parse(localStorage.getItem('bus_annual_leave') || 'null') || { startDate: '', total: 15 };
+
+function applyAnnualNumSize() {
+    const sz = userSettings.annualNumSize || 18;
+    const el = document.getElementById('annual-leave-display');
+    if(el) el.setAttribute('style', 'font-weight:900;color:#fff;line-height:1;font-size:'+sz+'px;');
+}
+
+function updateAnnualLeaveDisplay() {
+    const btn = document.getElementById('annual-leave-display');
+    if(!btn) return;
+    const sz = userSettings.annualNumSize || 18;
+    if(!annualLeaveSettings.startDate) { btn.innerText = '?'; btn.setAttribute('style','font-weight:900;color:#fff;line-height:1;font-size:'+sz+'px;'); return; }
+    // 발생일 기준 1년 사이클 내 연차 사용 카운트
+    const today = new Date();
+    const todayStr = getFormattedDateStr(today);
+    const [baseY, baseM, baseD] = annualLeaveSettings.startDate.split('-').map(Number);
+    let cycleStart = `${today.getFullYear()}-${String(baseM).padStart(2,'0')}-${String(baseD).padStart(2,'0')}`;
+    if(todayStr < cycleStart) {
+        cycleStart = `${today.getFullYear()-1}-${String(baseM).padStart(2,'0')}-${String(baseD).padStart(2,'0')}`;
+    }
+    const [csY] = cycleStart.split('-').map(Number);
+    const cycleEnd = `${csY+1}-${String(baseM).padStart(2,'0')}-${String(baseD).padStart(2,'0')}`;
+    let used = 0;
+    Object.keys(memoStorage).forEach(ds => {
+        if(ds >= cycleStart && ds < cycleEnd) {
+            const rec = memoStorage[ds];
+            if(rec && rec.customShift === '연차') used++;
+        }
+    });
+    const remain = annualLeaveSettings.total - used;
+    btn.innerText = `${remain}`;
+    btn.setAttribute('style','font-weight:900;color:#fff;line-height:1;font-size:'+sz+'px;');
+    // 5개 이하면 버튼 배경 빨간색
+    const wrap = btn.closest('.sched-view-btn');
+    if(wrap) {
+        if(remain <= 5) wrap.setAttribute('style','background:linear-gradient(135deg,#e03131,#c92a2a);box-shadow:0 2px 8px rgba(224,49,49,0.5);');
+        else wrap.setAttribute('style','background:linear-gradient(135deg,#e67700,#f59f00);box-shadow:0 2px 8px rgba(245,159,0,0.4);');
+    }
+}
+
+function openAnnualLeaveModal() {
+    document.getElementById('annual-leave-modal').style.display = 'flex';
+    document.getElementById('al-start-date').value = annualLeaveSettings.startDate || new Date().toISOString().slice(0,10);
+    document.getElementById('al-count-display').innerText = annualLeaveSettings.total || 15;
+    const lbl = document.getElementById('al-fs-num-preview');
+    if(lbl) lbl.setAttribute('style','min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#f59f00;');
+    if(lbl) lbl.innerText = (userSettings.annualNumSize || 18) + 'pt';
+    updateTenureDisplay();
+}
+
+// 입사일 기준 재직기간 자동 계산: "N년 OO일째 재직중"
+function updateTenureDisplay() {
+    const el = document.getElementById('al-tenure-display');
+    if(!el) return;
+    const v = document.getElementById('al-start-date').value;
+    if(!v) { el.innerText = ''; return; }
+    const start = new Date(v + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if(start > today) { el.innerText = '입사 예정'; return; }
+    let years = today.getFullYear() - start.getFullYear();
+    let anniv = new Date(start);
+    anniv.setFullYear(start.getFullYear() + years);
+    if(anniv > today) { years--; anniv.setFullYear(start.getFullYear() + years); }
+    const days = Math.floor((today - anniv) / 86400000) + 1;
+    el.innerText = `${years}년 ${days}일째 재직중`;
+}
+
+function closeAnnualLeaveModal() {
+    document.getElementById('annual-leave-modal').style.display = 'none';
+}
+
+function changeAnnualLeaveCount(delta) {
+    const el = document.getElementById('al-count-display');
+    let v = parseInt(el.innerText) + delta;
+    if(v < 0) v = 0;
+    if(v > 99) v = 99;
+    el.innerText = v;
+}
+
+function changeAnnualFontSize(delta) {
+    if(!userSettings.annualNumSize) userSettings.annualNumSize = 18;
+    userSettings.annualNumSize = Math.max(12, Math.min(30, userSettings.annualNumSize + parseInt(delta)));
+    const lbl = document.getElementById('al-fs-num-preview');
+    if(lbl) lbl.setAttribute('style','min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#f59f00;');
+    if(lbl) lbl.innerText = userSettings.annualNumSize + 'pt';
+}
+
+function saveAnnualLeave() {
+    annualLeaveSettings.startDate = document.getElementById('al-start-date').value;
+    annualLeaveSettings.total = parseInt(document.getElementById('al-count-display').innerText);
+    localStorage.setItem('bus_annual_leave', JSON.stringify(annualLeaveSettings));
+    saveUserSettings();
+    closeAnnualLeaveModal();
+    applyAnnualNumSize();
+    updateAnnualLeaveDisplay();
+    if(navigator.vibrate) navigator.vibrate(40);
+}
 
 function ensureDateRecord(dateStr) {
     if (!memoStorage[dateStr] || typeof memoStorage[dateStr] !== 'object') {
@@ -1579,7 +1813,7 @@ function renderSchedViewerAll() {
         if(!items.length) {
             const empty = document.createElement('div');
             empty.className = 'sv-no-item';
-            // empty message removed
+            empty.innerText = '등록된 일정이 없습니다';
             itemsWrap.appendChild(empty);
         } else {
             items.forEach(item => {
@@ -1684,6 +1918,8 @@ window.onload = function() {
     updateSchedModeBtn();
     renderCalendar(); selectDate(new Date()); initSwipeFeature();
     updateThemeToggleBtn();
+    applyAnnualNumSize();
+    updateAnnualLeaveDisplay();
 };
 
 
@@ -1840,7 +2076,18 @@ function initSettingsForm() {
 
 function toggleSettingsModal(show) {
     document.getElementById('settings-modal').style.display = show ? 'flex' : 'none';
-    if(show) { initAllRgbDisplays(); initSettingsDragClose(); }
+    if(show) {
+        initAllRgbDisplays(); initSettingsDragClose();
+        // 순번 기준점: 한 번도 직접 저장한 적 없으면(초기 기본값 그대로면) 화면에 보이는 달의 1일을 보여줌.
+        // 이미 저장한 적 있으면 그 값을 그대로 보여줌 (임의로 안 바뀜)
+        if(userSettings.baseDateStr === '2026-06-01' && !userSettings._baseDateSaved) {
+            const y = currentDate.getFullYear(), m = currentDate.getMonth();
+            const mm = String(m+1).padStart(2,'0');
+            document.getElementById('base-date-input').value = `${y}-${mm}-01`;
+        } else {
+            document.getElementById('base-date-input').value = userSettings.baseDateStr;
+        }
+    }
 }
 
 function initSettingsDragClose() {
@@ -1984,6 +2231,7 @@ function saveSettings() {
     const isOpen = modal && modal.style.display === 'flex';
     if(isOpen) {
         userSettings.baseDateStr = document.getElementById('base-date-input').value;
+        userSettings._baseDateSaved = true;
         userSettings.baseTurn = parseInt(document.getElementById('base-turn-select').value);
         userSettings.startShift = document.getElementById('start-shift-select').value;
         userSettings.reserveMode = document.getElementById('reserve-mode-check').checked;
@@ -2144,7 +2392,7 @@ function createDayCell(date, isOther, cont, hSet) {
 
     if(!isOther) {
         const d=date.getDate();
-        if(d===1||d===7||d===13||d===19||d===25) {
+        if(d===1||d===10||d===19||d===28) {
             try {
                 const lunar=getLunarDate(date.getFullYear(),date.getMonth()+1,d);
                 const lunarEl=document.createElement('span');
@@ -2377,6 +2625,7 @@ function applyShift(shift) {
     shiftEl.innerText = newShift;
     shiftEl.style.color = newShift==='오전'?'var(--am-color)':newShift==='오후'?'var(--pm-color)':newShift==='연차'?'#f59f00':'var(--holiday-color)';
     renderCalendar(); selectDate(dayModalDate);
+    updateAnnualLeaveDisplay();
     const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
     if(cell) cell.classList.add('selected-active');
     if(navigator.vibrate) navigator.vibrate(40);
@@ -2431,7 +2680,7 @@ function renderBottomScheduleList(ds) {
     const rec = memoStorage[ds];
     const schedules = (rec&&rec.schedules)?rec.schedules:[];
     const annivs = getAnniversariesForDate(ds);
-    if(!schedules.length && !annivs.length){ cont.innerHTML=''; return; }
+    if(!schedules.length && !annivs.length){ cont.innerHTML='<div class="no-schedule">등록된 일정이 없습니다</div>'; return; }
     annivs.forEach(a=>{
         const item=document.createElement('div'); item.className='schedule-item';
         item.style.cssText='display:flex;align-items:center;gap:6px;border-left-color:#cc5de8;';
