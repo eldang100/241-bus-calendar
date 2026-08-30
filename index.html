@@ -501,7 +501,7 @@ self.addEventListener('fetch', e => {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 4px 8px;
+            padding: 4px 4px;
             gap: 4px;
             flex-shrink: 0;
             cursor: pointer;
@@ -628,6 +628,73 @@ self.addEventListener('fetch', e => {
             font-size: 10px; color: var(--text-sub);
             text-align: center; padding: 6px 0 2px; font-weight: 400;
         }
+
+        /* ══ 배차표 - 좌우 스와이프 바텀시트 ══ */
+        .timetable-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1500;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+        .timetable-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px 20px 0 0;
+            width: 100%; max-width: 450px;
+            height: 78vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.45);
+            overflow: hidden;
+            animation: svSlideUp 0.25s ease;
+        }
+        .timetable-header {
+            display: flex; align-items: center;
+            padding: 10px 16px 8px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .timetable-title { font-size: 15px; color: var(--text-main); font-weight: 900; flex: 1; }
+        .timetable-tabs {
+            display: flex; gap: 6px;
+            padding: 8px 12px; flex-shrink: 0;
+        }
+        .timetable-tab {
+            flex: 1; text-align: center; padding: 8px 0;
+            border-radius: 10px; background: var(--bg-weekday);
+            font-weight: 800; font-size: 13px; cursor: pointer;
+            color: var(--text-sub); transition: background 0.15s, color 0.15s;
+            user-select: none; -webkit-user-select: none;
+        }
+        .timetable-tab.active {
+            background: linear-gradient(135deg,#4c6ef5,#7048e8);
+            color: #fff;
+        }
+        .timetable-swipe-wrap {
+            display: flex; flex: 1;
+            overflow-x: auto; overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .timetable-page {
+            flex: 0 0 100%; scroll-snap-align: start;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            padding: 4px 14px 16px;
+        }
+        .timetable-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        .timetable-table th, .timetable-table td {
+            border: 1px solid var(--border-color);
+            padding: 6px 3px; text-align: center; color: var(--text-main);
+        }
+        .timetable-table thead th {
+            background: var(--bg-weekday); font-weight: 800;
+            position: sticky; top: 0; z-index: 1;
+        }
+        .timetable-table td.tt-turn {
+            font-weight: 900; color: var(--bus-pink); background: var(--bg-weekday);
+        }
+        .timetable-table tbody tr:nth-child(even) td:not(.tt-turn) { background: rgba(128,128,128,0.06); }
 
         /* ══ 모달 공통 ══ */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); justify-content: center; align-items: flex-end; z-index: 1000; padding: 0; }
@@ -836,8 +903,14 @@ self.addEventListener('fetch', e => {
                     <div class="no-holiday">공휴일 없음</div>
                 </div>
             </div>
-            <!-- 잔여연차 + 밴드가기 + 일정보기 버튼 -->
+            <!-- 배차표 + 잔여연차 + 밴드가기 + 일정보기 버튼 -->
             <div style="display:flex;gap:0px;align-items:flex-end;">
+                <div class="sched-view-btn-wrap" onclick="openTimetable()" style="padding:4px 1px;">
+                    <div class="sched-view-btn" style="background:linear-gradient(135deg,#1c7ed6,#4dabf7);box-shadow:0 2px 8px rgba(28,126,214,0.4);">
+                        <span style="font-size:20px;line-height:1;">🚌</span>
+                    </div>
+                    <div class="sched-view-btn-label">배차표</div>
+                </div>
                 <div class="sched-view-btn-wrap" onclick="openAnnualLeaveModal()" style="padding:4px 1px;">
                     <div class="sched-view-btn" style="background:linear-gradient(135deg,#e67700,#f59f00);box-shadow:0 2px 8px rgba(245,159,0,0.4);">
                         <div id="annual-leave-display" style="font-weight:900;color:#fff;line-height:1;font-size:18px;">-</div>
@@ -914,6 +987,32 @@ self.addEventListener('fetch', e => {
         </div>
         <div class="sched-viewer-body" id="sv-body">
             <!-- 달별 섹션이 JS로 렌더링됨 -->
+        </div>
+    </div>
+</div>
+
+<!-- ══ 배차표 - 좌우 스와이프 바텀시트 ══ -->
+<div class="timetable-overlay" id="timetable-overlay" onclick="closeTimetable(event)">
+    <div class="timetable-box" id="timetable-box">
+        <div class="timetable-header">
+            <div style="width:100%;">
+                <span class="sv-drag-handle" id="tt-drag-handle"></span>
+                <div style="display:flex;align-items:center;">
+                    <div class="timetable-title">🚌 배차표</div>
+                    <div style="font-size:10px;color:var(--text-sub);margin-right:8px;">좌우로 스와이프</div>
+                    <button class="sv-close-btn" onclick="closeTimetableDirect()">✕</button>
+                </div>
+            </div>
+        </div>
+        <div class="timetable-tabs">
+            <div class="timetable-tab active" data-idx="0" onclick="goToTimetablePage(0)">평일</div>
+            <div class="timetable-tab" data-idx="1" onclick="goToTimetablePage(1)">주말</div>
+            <div class="timetable-tab" data-idx="2" onclick="goToTimetablePage(2)">공휴일</div>
+        </div>
+        <div class="timetable-swipe-wrap" id="timetable-swipe-wrap">
+            <div class="timetable-page" id="timetable-page-weekday"></div>
+            <div class="timetable-page" id="timetable-page-weekend"></div>
+            <div class="timetable-page" id="timetable-page-holiday"></div>
         </div>
     </div>
 </div>
@@ -1209,6 +1308,67 @@ self.addEventListener('fetch', e => {
 </div>
 
 <script>
+// ===== 모달 뒤로가기(하드웨어 백버튼) 처리 =====
+// 모달을 열 때 pushModalHistory()로 히스토리를 하나 쌓아두면,
+// 폰 뒤로가기 버튼을 눌렀을 때 앱을 나가는 대신 popstate 이벤트가 발생해
+// 아래 리스너가 열려있는 모달만 화면에서 닫아준다.
+// 저장/닫기 버튼으로 닫을 때는 popModalHistoryIfNeeded()가 쌓아둔 히스토리를
+// 스스로 소비(history.back())해서 다음 번 뒤로가기 때 빈 팝업이 남지 않게 한다.
+let __consumingOwnHistory = false;
+
+function pushModalHistory() {
+    history.pushState({ appModal: true }, '');
+}
+
+function popModalHistoryIfNeeded() {
+    if (history.state && history.state.appModal) {
+        __consumingOwnHistory = true;
+        history.back();
+    }
+}
+
+window.addEventListener('popstate', function() {
+    if (__consumingOwnHistory) { __consumingOwnHistory = false; return; }
+    // 실제 하드웨어 뒤로가기: 열려있는 모달만 화면에서 닫는다 (히스토리 추가 조작 없음)
+    const cpicker = document.getElementById('cpicker-overlay');
+    if (cpicker && cpicker.style.display === 'flex') {
+        cpicker.style.display = 'none';
+        if (typeof cpickerTarget !== 'undefined') cpickerTarget = null;
+        return;
+    }
+    const annualModal = document.getElementById('annual-leave-modal');
+    if (annualModal && annualModal.style.display === 'flex') {
+        annualModal.style.display = 'none';
+        return;
+    }
+    const dayModal = document.getElementById('day-modal');
+    if (dayModal && dayModal.style.display === 'flex') {
+        dayModal.style.display = 'none';
+        const inner = document.getElementById('day-modal-inner');
+        if (inner) { inner.classList.remove('closing'); inner.style.transform = ''; }
+        return;
+    }
+    const schedOverlay = document.getElementById('sched-viewer-overlay');
+    if (schedOverlay && schedOverlay.style.display === 'flex') {
+        schedOverlay.style.display = 'none';
+        const box = document.getElementById('sched-viewer-box');
+        if (box) { box.style.transition = ''; box.style.transform = ''; }
+        return;
+    }
+    const timetableOverlay = document.getElementById('timetable-overlay');
+    if (timetableOverlay && timetableOverlay.style.display === 'flex') {
+        timetableOverlay.style.display = 'none';
+        const ttBox = document.getElementById('timetable-box');
+        if (ttBox) { ttBox.style.transition = ''; ttBox.style.transform = ''; }
+        return;
+    }
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal && settingsModal.style.display === 'flex') {
+        settingsModal.style.display = 'none';
+        return;
+    }
+});
+
 const TOTAL_TURNS = 27;
 
 // ── 배차 모드 ──
@@ -1557,6 +1717,7 @@ function updateAnnualLeaveDisplay() {
 
 function openAnnualLeaveModal() {
     document.getElementById('annual-leave-modal').style.display = 'flex';
+    pushModalHistory();
     document.getElementById('al-start-date').value = annualLeaveSettings.startDate || new Date().toISOString().slice(0,10);
     document.getElementById('al-count-display').innerText = annualLeaveSettings.total || 15;
     const lbl = document.getElementById('al-fs-num-preview');
@@ -1585,6 +1746,7 @@ function updateTenureDisplay() {
 
 function closeAnnualLeaveModal() {
     document.getElementById('annual-leave-modal').style.display = 'none';
+    popModalHistoryIfNeeded();
 }
 
 function changeAnnualLeaveCount(delta) {
@@ -1744,6 +1906,7 @@ function openSchedViewer() {
             prevSection.scrollIntoView({ block: 'start' });
         }
     }, 200);
+    pushModalHistory();
     initSvDragClose();
 }
 
@@ -1753,6 +1916,7 @@ function closeSchedViewer(e) {
 }
 
 function closeSchedViewerDirect() {
+    popModalHistoryIfNeeded();
     const box = document.getElementById('sched-viewer-box');
     box.style.transition = 'transform 0.22s ease';
     box.style.transform = 'translateY(100%)';
@@ -1764,6 +1928,100 @@ function closeSchedViewerDirect() {
 }
 
 function svChangeMonth(delta) { /* 더 이상 사용 안 함 */ }
+
+// ══ 배차표 (평일/주말/공휴일 좌우 스와이프) ══
+function buildTimetableRows(data) {
+    let html = '<table class="timetable-table"><thead><tr><th>순번</th><th>1회</th><th>2회</th><th>3회</th><th>4회</th><th>5회</th></tr></thead><tbody>';
+    Object.keys(data).sort((a,b) => (+a) - (+b)).forEach(turn => {
+        const times = data[turn] || [];
+        const cells = [0,1,2,3,4].map(i => `<td>${times[i] || ''}</td>`).join('');
+        html += `<tr><td class="tt-turn">${turn}</td>${cells}</tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+}
+
+function renderTimetable() {
+    document.getElementById('timetable-page-weekday').innerHTML = buildTimetableRows(BUS_SCHEDULE.weekday);
+    document.getElementById('timetable-page-weekend').innerHTML = buildTimetableRows(BUS_SCHEDULE.weekend);
+    document.getElementById('timetable-page-holiday').innerHTML = buildTimetableRows(BUS_SCHEDULE.holiday);
+}
+
+function setActiveTimetableTab(idx) {
+    document.querySelectorAll('.timetable-tab').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+    });
+}
+
+function goToTimetablePage(idx) {
+    const wrap = document.getElementById('timetable-swipe-wrap');
+    wrap.scrollTo({ left: wrap.clientWidth * idx, behavior: 'smooth' });
+    setActiveTimetableTab(idx);
+}
+
+function onTimetableSwipeScroll() {
+    const wrap = document.getElementById('timetable-swipe-wrap');
+    if(!wrap.clientWidth) return;
+    const idx = Math.round(wrap.scrollLeft / wrap.clientWidth);
+    setActiveTimetableTab(idx);
+}
+
+function openTimetable() {
+    renderTimetable();
+    document.getElementById('timetable-overlay').style.display = 'flex';
+    pushModalHistory();
+    const wrap = document.getElementById('timetable-swipe-wrap');
+    wrap.scrollLeft = 0;
+    setActiveTimetableTab(0);
+    wrap.onscroll = onTimetableSwipeScroll;
+    initTimetableDragClose();
+}
+
+function closeTimetable(e) {
+    if(e && e.target !== document.getElementById('timetable-overlay')) return;
+    closeTimetableDirect();
+}
+
+function closeTimetableDirect() {
+    popModalHistoryIfNeeded();
+    const box = document.getElementById('timetable-box');
+    box.style.transition = 'transform 0.22s ease';
+    box.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+        document.getElementById('timetable-overlay').style.display = 'none';
+        box.style.transition = '';
+        box.style.transform = '';
+    }, 230);
+}
+
+function initTimetableDragClose() {
+    const box = document.getElementById('timetable-box');
+    const handle = document.getElementById('tt-drag-handle');
+    if(!box || !handle) return;
+    let startY = 0, dragging = false;
+    function onStart(y) { startY = y; dragging = true; box.style.transition = 'none'; }
+    function onMove(y) {
+        if(!dragging) return;
+        const dy = Math.max(0, y - startY);
+        box.style.transform = `translateY(${dy}px)`;
+    }
+    function onEnd(y) {
+        if(!dragging) return; dragging = false; box.style.transition = '';
+        const dy = y - startY;
+        if(dy > 80) closeTimetableDirect();
+        else box.style.transform = '';
+    }
+    handle.ontouchstart = e => { e.stopPropagation(); onStart(e.touches[0].clientY); };
+    handle.ontouchmove  = e => { e.stopPropagation(); onMove(e.touches[0].clientY); };
+    handle.ontouchend   = e => { onEnd(e.changedTouches[0].clientY); };
+    handle.onmousedown  = e => {
+        e.stopPropagation(); onStart(e.clientY);
+        const mm = ev => onMove(ev.clientY);
+        const mu = ev => { onEnd(ev.clientY); document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); };
+        document.addEventListener('mousemove', mm);
+        document.addEventListener('mouseup', mu);
+    };
+}
 
 // 전체 달(전달~다음달 포함 앞뒤 6개월) 렌더링
 // 일정 뷰어 범위: 앞뒤 각 6개월, 더보기로 추가 확장
@@ -2077,6 +2335,7 @@ function initSettingsForm() {
 function toggleSettingsModal(show) {
     document.getElementById('settings-modal').style.display = show ? 'flex' : 'none';
     if(show) {
+        pushModalHistory();
         initAllRgbDisplays(); initSettingsDragClose();
         // 순번 기준점: 한 번도 직접 저장한 적 없으면(초기 기본값 그대로면) 화면에 보이는 달의 1일을 보여줌.
         // 이미 저장한 적 있으면 그 값을 그대로 보여줌 (임의로 안 바뀜)
@@ -2087,6 +2346,8 @@ function toggleSettingsModal(show) {
         } else {
             document.getElementById('base-date-input').value = userSettings.baseDateStr;
         }
+    } else {
+        popModalHistoryIfNeeded();
     }
 }
 
@@ -2171,6 +2432,7 @@ function openCpicker(colorId) {
     updateSSliderBg(h,v); updateVSliderBg(h,s);
     refreshCpickerUI(h,s,v,hex);
     document.getElementById('cpicker-overlay').style.display = 'flex';
+    pushModalHistory();
 }
 
 function onCpickerSlide() {
@@ -2224,6 +2486,7 @@ function confirmCpicker() {
 function closeCpicker() {
     document.getElementById('cpicker-overlay').style.display = 'none';
     cpickerTarget = null;
+    popModalHistoryIfNeeded();
 }
 
 function saveSettings() {
@@ -2553,6 +2816,7 @@ function openDayModal(date) {
     document.getElementById('popup-anniv-input').value = '';
     document.getElementById('popup-anniv-yearly').checked = false;
     document.getElementById('day-modal').style.display = 'flex';
+    pushModalHistory();
     selectDate(date);
 }
 
@@ -2600,6 +2864,7 @@ function applyBgColor(ds, color) {
 }
 
 function closeDayModalAnimated() {
+    popModalHistoryIfNeeded();
     const inner = document.getElementById('day-modal-inner');
     inner.classList.add('closing');
     inner.addEventListener('animationend', () => {
