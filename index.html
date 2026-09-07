@@ -489,8 +489,8 @@ self.addEventListener('fetch', e => {
             border-right: 1px solid var(--border-color);
         }
         .holiday-section-title { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
-        .holiday-list { display: flex; flex-direction: column; gap: 3px; max-height: 80px; overflow-y: auto; }
-        .holiday-item { display: flex; flex-direction: column; font-size: 11px; gap: 1px; }
+        .holiday-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 5px 8px; max-height: 80px; overflow-y: auto; align-content: flex-start; }
+        .holiday-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; gap: 1px; background: rgba(128,128,128,0.09); border-radius: 7px; padding: 3px 7px; }
         .holiday-item .h-date { color: var(--holiday-color); font-size: 10px; }
         .holiday-item .h-name { color: var(--text-main); font-size: 11px; }
         .no-holiday { font-size: 11px; color: var(--text-sub); text-align: center; padding: 4px 0; font-weight: 400; }
@@ -1123,35 +1123,35 @@ self.addEventListener('fetch', e => {
             </div>
         </div>
 
-        <!-- 1. 순번 기준점 -->
+        <!-- 1. 순번 기준점 + 근무형태 (3파트) -->
         <div class="setting-group">
-            <label class="setting-label">1. 순번 기준점</label>
-            <div style="display:flex;gap:6px;">
-                <input type="date" class="select-input" id="base-date-input" value="2026-06-01" style="width:57%;">
-                <select class="select-input" id="base-turn-select" style="width:43%;"></select>
-            </div>
-            <!-- 예비기사 모드 토글 버튼 -->
-            <div style="margin-top:8px;">
-                <button id="reserve-mode-btn" onclick="toggleReserveMode()"
-                    style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid var(--border-input);background:var(--bg-weekday);color:var(--text-sub);font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;transition:all 0.18s;">
-                    <span>🚌 예비기사 모드 (순번 숨김)</span>
-                    <span id="reserve-mode-indicator" style="font-size:12px;padding:3px 12px;border-radius:20px;background:var(--bg-input);color:var(--text-sub);font-weight:900;transition:all 0.18s;">OFF</span>
-                </button>
-                <input type="checkbox" id="reserve-mode-check" style="display:none;">
-            </div>
-        </div>
-
-        <!-- 2+3 한 줄 -->
-        <div style="display:flex;gap:6px;">
-            <div class="setting-group" style="flex:1;">
-                <label class="setting-label">2. 기준일 근무형태</label>
-                <select class="select-input" id="start-shift-select">
+            <label class="setting-label">1. 순번 기준점 · 근무형태</label>
+            <div style="display:flex;gap:5px;">
+                <input type="date" class="select-input" id="base-date-input" value="2026-06-01" style="flex:1.5;padding:5px 4px;">
+                <select class="select-input" id="base-turn-select" style="flex:0.9;"></select>
+                <select class="select-input" id="start-shift-select" style="flex:1.1;">
                     <option value="오전">오전 근무</option>
                     <option value="오후">오후 근무</option>
                 </select>
             </div>
-            <div class="setting-group" style="flex:1.5;">
-                <label class="setting-label">3. 정기 휴무 요일</label>
+        </div>
+
+        <!-- 예비기사모드 + 정휴일설정 한 줄 -->
+        <div style="display:flex;gap:6px;">
+            <div class="setting-group" style="flex:1;padding:5px 6px;display:flex;align-items:center;">
+                <!-- 예비기사 모드 토글 버튼 -->
+                <button id="reserve-mode-btn" onclick="toggleReserveMode()"
+                    style="width:100%;padding:6px 10px;border-radius:9px;border:2px solid var(--border-input);background:var(--bg-weekday);color:var(--text-sub);cursor:pointer;display:flex;align-items:stretch;justify-content:space-between;gap:8px;font-family:inherit;transition:all 0.18s;">
+                    <span style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;">
+                        <span style="font-size:11.5px;font-weight:700;white-space:nowrap;">🚌 순번숨김</span>
+                        <span style="font-size:13px;font-weight:900;white-space:nowrap;letter-spacing:-0.2px;">예비기사모드</span>
+                    </span>
+                    <span id="reserve-mode-indicator" style="font-size:12px;padding:0 14px;border-radius:20px;background:var(--bg-input);color:var(--text-sub);font-weight:900;transition:all 0.18s;flex-shrink:0;display:flex;align-items:center;justify-content:center;">OFF</span>
+                </button>
+                <input type="checkbox" id="reserve-mode-check" style="display:none;">
+            </div>
+            <div class="setting-group" style="flex:1.6;padding:5px 8px;display:flex;flex-direction:column;justify-content:center;">
+                <label class="setting-label" style="margin-bottom:3px;">정휴일설정</label>
                 <div class="day-toggle-group">
                     <button class="day-toggle-btn" data-day="0">일</button>
                     <button class="day-toggle-btn" data-day="1">월</button>
@@ -1804,9 +1804,10 @@ function getHolidaysForMonth(year, month) {
         const d = new Date(ds);
         if(d.getFullYear()===year && d.getMonth()===month){
             let label=name;
-            if(name==='설날연휴'){const i=dates.indexOf(ds);label=i===0?'설날 전날':i===1?'설날':i===2?'설날 다음날':'설날 대체공휴일';}
-            else if(name==='추석연휴'){const i=dates.indexOf(ds);label=i===0?'추석 전날':i===1?'추석':i===2?'추석 다음날':'추석 대체공휴일';}
-            result.push({date:ds,name:label});
+            let group=null;
+            if(name==='설날연휴'){const i=dates.indexOf(ds);label=i===0?'설날 전날':i===1?'설날':i===2?'설날 다음날':'설날 대체공휴일';group='설날연휴';}
+            else if(name==='추석연휴'){const i=dates.indexOf(ds);label=i===0?'추석 전날':i===1?'추석':i===2?'추석 다음날':'추석 대체공휴일';group='추석연휴';}
+            result.push({date:ds,name:label,group});
         }
     }));
     return result.sort((a,b)=>a.date.localeCompare(b.date));
@@ -1818,10 +1819,39 @@ function renderHolidayList(y,m){
     const c=document.getElementById('holiday-list-container'); c.innerHTML='';
     if(!holidays.length){c.innerHTML='<div class="no-holiday">없음</div>';return;}
     const days=['일','월','화','수','목','금','토'];
-    holidays.forEach(h=>{
-        const d=new Date(h.date);
+
+    // 설날연휴/추석연휴처럼 연속된 날짜는 하나의 범위(00~00)로 묶는다
+    const grouped=[];
+    let i=0;
+    while(i<holidays.length){
+        const h=holidays[i];
+        if(h.group){
+            let j=i;
+            while(j+1<holidays.length && holidays[j+1].group===h.group &&
+                  (new Date(holidays[j+1].date) - new Date(holidays[j].date))===86400000){
+                j++;
+            }
+            if(j>i){
+                grouped.push({start:holidays[i].date,end:holidays[j].date,name:h.group,isRange:true});
+                i=j+1; continue;
+            }
+        }
+        grouped.push({date:h.date,name:h.name,isRange:false});
+        i++;
+    }
+
+    grouped.forEach(h=>{
         const el=document.createElement('div'); el.className='holiday-item';
-        el.innerHTML=`<span class="h-date">${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})</span><span class="h-name">${h.name}</span>`;
+        if(h.isRange){
+            const ds=new Date(h.start), de=new Date(h.end);
+            const dateLabel=(ds.getMonth()===de.getMonth())
+                ? `${ds.getMonth()+1}/${ds.getDate()}~${de.getDate()}`
+                : `${ds.getMonth()+1}/${ds.getDate()}~${de.getMonth()+1}/${de.getDate()}`;
+            el.innerHTML=`<span class="h-date">${dateLabel}</span><span class="h-name">${h.name}</span>`;
+        } else {
+            const d=new Date(h.date);
+            el.innerHTML=`<span class="h-date">${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})</span><span class="h-name">${h.name}</span>`;
+        }
         c.appendChild(el);
     });
 }
