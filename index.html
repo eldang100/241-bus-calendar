@@ -729,8 +729,8 @@ self.addEventListener('fetch', e => {
         .shift-select-btn { padding: 9px 0; font-size: 14px; font-weight: 700; border: none; border-radius: 9px; cursor: pointer; color: white; transition: opacity 0.15s, transform 0.1s; letter-spacing: -0.3px; }
         .shift-select-btn:active { opacity: 0.85; transform: scale(0.97); }
         .bg-color-wrap { padding: 8px 12px 0; }
-        .bg-color-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-        .bg-color-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; flex-shrink: 0; }
+        .bg-color-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+        .bg-color-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; flex-shrink: 0; }
         .bg-color-swatch:active { transform: scale(0.88); }
         .bg-color-swatch.selected-swatch { border-color: #fff; box-shadow: 0 0 0 2px #4c6ef5; }
         .bg-color-swatch.swatch-none { background: var(--bg-weekday); border: 2px solid var(--border-input); font-size: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
@@ -877,16 +877,10 @@ self.addEventListener('fetch', e => {
                 <div id="depart-pm-row" style="display:none;align-items:center;gap:3px;flex-wrap:nowrap;justify-content:flex-end;width:100%;overflow:hidden;"></div>
             </div>
         </div>
-        <div class="detail-hint">💡 탭: 날짜 선택·일정입력 &nbsp;|&nbsp; 길게 누르기: 근무변경·순번변경·기념일등록</div>
+        <div class="detail-hint">💡 탭: 날짜 선택 &nbsp;|&nbsp; 길게 누르기: 근무변경·순번변경·일정등록·기념일등록</div>
 
         <div class="detail-schedule-area">
             <div class="detail-schedule-title">📅 일정</div>
-            <div id="bottom-inline-input" style="display:none;flex;align-items:center;gap:6px;margin-bottom:6px;">
-                <input type="text" id="bottom-schedule-input" placeholder="일정 입력..."
-                    style="flex:1;padding:6px 10px;font-size:13px;border-radius:8px;border:1.5px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-family:inherit;outline:none;-webkit-user-select:text;user-select:text;"
-                    onkeydown="if(event.key==='Enter')addBottomSchedule()">
-                <button onclick="addBottomSchedule()" style="padding:6px 12px;font-size:12px;font-weight:700;border:none;border-radius:8px;background:linear-gradient(135deg,#4c6ef5,#7048e8);color:white;cursor:pointer;white-space:nowrap;flex-shrink:0;">추가</button>
-            </div>
             <div class="schedule-list" id="bottom-schedule-list">
                 <div class="no-schedule">날짜를 눌러 선택하세요</div>
             </div>
@@ -947,22 +941,15 @@ self.addEventListener('fetch', e => {
             </div>
             <input type="date" id="al-start-date" class="select-input" style="width:100%;" onchange="updateTenureDisplay()">
         </div>
-        <!-- 총갯수(왼) + 크기(오) 균등 한 줄 -->
-        <div style="margin-bottom:14px;">
-            <div style="display:flex;align-items:center;gap:0;">
-                <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;">
-                    <span style="font-size:11px;color:var(--text-sub);font-weight:700;">총갯수</span>
-                    <button onclick="changeAnnualLeaveCount(-1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">−</button>
-                    <div id="al-count-display" style="min-width:28px;text-align:center;font-size:17px;font-weight:900;color:#f59f00;">15</div>
-                    <button onclick="changeAnnualLeaveCount(1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">＋</button>
-                </div>
-                <div style="width:1px;height:24px;background:var(--border-input);margin:0 4px;flex-shrink:0;"></div>
-                <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;">
-                    <span style="font-size:11px;color:var(--text-sub);font-weight:700;">크기</span>
-                    <button onclick="changeAnnualFontSize(-1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">−</button>
-                    <div id="al-fs-num-preview" style="min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#f59f00;">18pt</div>
-                    <button onclick="changeAnnualFontSize(1)" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">＋</button>
-                </div>
+        <!-- 연차갯수 자동계산 + 수동조정 -->
+        <div style="margin-bottom:14px;padding:10px 12px;border-radius:8px;background:var(--bg-weekday);">
+            <div style="font-size:11px;color:var(--text-sub);font-weight:700;text-align:center;margin-bottom:8px;">📌 입사일 입력시 연차갯수는 자동계산 입력됩니다</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                <span style="font-size:12px;color:var(--text-sub);font-weight:700;">총갯수</span>
+                <button onclick="changeAnnualLeaveCount(-1)" style="width:30px;height:30px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">−</button>
+                <div id="al-count-display" style="min-width:32px;text-align:center;font-size:18px;font-weight:900;color:#f59f00;">15</div>
+                <button onclick="changeAnnualLeaveCount(1)" style="width:30px;height:30px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);font-size:15px;cursor:pointer;font-weight:900;padding:0;">＋</button>
+                <span style="font-size:10px;color:var(--text-sub);opacity:0.7;">(수동조정 가능)</span>
             </div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -1046,21 +1033,32 @@ self.addEventListener('fetch', e => {
 
         <div class="popup-divider"></div>
 
-        <div class="popup-section-wrap">
-            <div class="popup-section-label">🔢 순번 변경 <span id="popup-turn-auto-badge" style="font-size:10px;color:var(--text-sub);font-weight:400;">(자동 계산 중)</span></div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <button onclick="adjustPopupTurn(-1)" style="width:38px;height:44px;font-size:20px;border-radius:8px;border:1px solid var(--border-input);background:var(--bg-weekday);color:var(--text-main);cursor:pointer;flex-shrink:0;font-weight:900;">−</button>
-                <input id="popup-turn-input" type="number" min="1" max="27" inputmode="numeric"
-                    onclick="this.select()"
-                    style="flex:1;text-align:center;font-size:28px;font-weight:900;color:var(--bus-pink);background:var(--bg-weekday);border:1.5px solid var(--border-input);border-radius:8px;height:44px;outline:none;font-family:inherit;-webkit-user-select:text;user-select:text;padding:0 4px;">
-                <button onclick="adjustPopupTurn(1)" style="width:38px;height:44px;font-size:20px;border-radius:8px;border:1px solid var(--border-input);background:var(--bg-weekday);color:var(--text-main);cursor:pointer;flex-shrink:0;font-weight:900;">＋</button>
+        <div class="popup-section-wrap" style="display:flex;gap:10px;">
+            <div style="flex:1;min-width:0;">
+                <div class="popup-section-label" style="white-space:nowrap;">🔢 순번변경 <span id="popup-turn-auto-badge" style="font-size:9px;color:var(--text-sub);font-weight:400;">(자동)</span></div>
+                <div style="display:flex;align-items:center;gap:5px;">
+                    <button onclick="adjustPopupTurn(-1)" style="width:30px;height:42px;font-size:18px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-weekday);color:var(--text-main);cursor:pointer;flex-shrink:0;font-weight:900;padding:0;">−</button>
+                    <input id="popup-turn-input" type="number" min="1" max="27" inputmode="numeric"
+                        onclick="this.select()"
+                        style="flex:1;min-width:0;text-align:center;font-size:22px;font-weight:900;color:var(--bus-pink);background:var(--bg-weekday);border:1.5px solid var(--border-input);border-radius:7px;height:42px;outline:none;font-family:inherit;-webkit-user-select:text;user-select:text;padding:0 2px;">
+                    <button onclick="adjustPopupTurn(1)" style="width:30px;height:42px;font-size:18px;border-radius:7px;border:1px solid var(--border-input);background:var(--bg-weekday);color:var(--text-main);cursor:pointer;flex-shrink:0;font-weight:900;padding:0;">＋</button>
+                </div>
+            </div>
+            <div class="bg-color-wrap" style="flex:1;min-width:0;">
+                <div class="popup-section-label">🎨 요일 바탕 색상변경</div>
+                <div class="bg-color-row" id="bg-color-row" style="gap:6px;height:42px;align-items:center;"></div>
             </div>
         </div>
 
         <div class="popup-divider"></div>
-        <div class="bg-color-wrap">
-            <div class="popup-section-label">🎨 날짜 배경색</div>
-            <div class="bg-color-row" id="bg-color-row"></div>
+
+        <div class="popup-section-wrap">
+            <div class="popup-section-label">📅 일정등록</div>
+            <div class="popup-input-row">
+                <input type="text" class="popup-schedule-input" id="popup-schedule-input" placeholder="일정 입력..." onkeydown="if(event.key==='Enter')addPopupSchedule()">
+                <button class="popup-add-btn" onclick="addPopupSchedule()">추가</button>
+            </div>
+            <div class="popup-schedule-list" id="popup-schedule-list"></div>
         </div>
 
         <div class="popup-divider"></div>
@@ -1587,7 +1585,7 @@ let selectedDateStr = "";
 let dayModalDate = null;
 
 const BG_PALETTE = [
-    null,'#ff8a8a','#ffb347','#ffe066','#8ce99a','#74c0fc','#da77f2','#f783ac','#a9e34b','#63e6be',
+    null,'#ff8a8a','#74c0fc','#8ce99a',
 ];
 
 let userSettings = {
@@ -1719,34 +1717,13 @@ function openAnnualLeaveModal() {
     document.getElementById('annual-leave-modal').style.display = 'flex';
     pushModalHistory();
     document.getElementById('al-start-date').value = annualLeaveSettings.startDate || new Date().toISOString().slice(0,10);
-    document.getElementById('al-count-display').innerText = annualLeaveSettings.total || 15;
-    const lbl = document.getElementById('al-fs-num-preview');
-    if(lbl) lbl.setAttribute('style','min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#f59f00;');
-    if(lbl) lbl.innerText = (userSettings.annualNumSize || 18) + 'pt';
     updateTenureDisplay();
 }
 
-// 입사일 기준 재직기간 자동 계산: "N년 OO일째 재직중"
-function updateTenureDisplay() {
-    const el = document.getElementById('al-tenure-display');
-    if(!el) return;
-    const v = document.getElementById('al-start-date').value;
-    if(!v) { el.innerText = ''; return; }
-    const start = new Date(v + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    if(start > today) { el.innerText = '입사 예정'; return; }
-    let years = today.getFullYear() - start.getFullYear();
-    let anniv = new Date(start);
-    anniv.setFullYear(start.getFullYear() + years);
-    if(anniv > today) { years--; anniv.setFullYear(start.getFullYear() + years); }
-    const days = Math.floor((today - anniv) / 86400000) + 1;
-    el.innerText = `${years}년 ${days}일째 재직중`;
-}
-
-function closeAnnualLeaveModal() {
-    document.getElementById('annual-leave-modal').style.display = 'none';
-    popModalHistoryIfNeeded();
+// 근속연수별 연차갯수 자동 계산 (근로기준법 60조: 15일 + 2년마다 1일 가산, 최대 25일)
+function calcAnnualLeaveDays(years) {
+    if(years < 1) return 15;
+    return Math.min(25, 15 + Math.floor((years - 1) / 2));
 }
 
 function changeAnnualLeaveCount(delta) {
@@ -1757,12 +1734,30 @@ function changeAnnualLeaveCount(delta) {
     el.innerText = v;
 }
 
-function changeAnnualFontSize(delta) {
-    if(!userSettings.annualNumSize) userSettings.annualNumSize = 18;
-    userSettings.annualNumSize = Math.max(12, Math.min(30, userSettings.annualNumSize + parseInt(delta)));
-    const lbl = document.getElementById('al-fs-num-preview');
-    if(lbl) lbl.setAttribute('style','min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#f59f00;');
-    if(lbl) lbl.innerText = userSettings.annualNumSize + 'pt';
+// 입사일 기준 재직기간 자동 계산: "N년 OO일째 재직중" + 연차갯수 자동입력
+function updateTenureDisplay() {
+    const el = document.getElementById('al-tenure-display');
+    if(!el) return;
+    const v = document.getElementById('al-start-date').value;
+    const countEl = document.getElementById('al-count-display');
+    if(!v) { el.innerText = ''; return; }
+    const start = new Date(v + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if(start > today) { el.innerText = '입사 예정'; if(countEl) countEl.innerText = 15; return; }
+    let years = today.getFullYear() - start.getFullYear();
+    let anniv = new Date(start);
+    anniv.setFullYear(start.getFullYear() + years);
+    if(anniv > today) { years--; anniv.setFullYear(start.getFullYear() + years); }
+    const days = Math.floor((today - anniv) / 86400000) + 1;
+    const leaveDays = calcAnnualLeaveDays(years);
+    if(countEl) countEl.innerText = leaveDays;
+    el.innerText = `${years}년 ${days}일째 재직중 · 연차 ${leaveDays}일`;
+}
+
+function closeAnnualLeaveModal() {
+    document.getElementById('annual-leave-modal').style.display = 'none';
+    popModalHistoryIfNeeded();
 }
 
 function saveAnnualLeave() {
@@ -2367,12 +2362,10 @@ function toggleSettingsModal(show) {
     if(show) {
         pushModalHistory();
         initAllRgbDisplays(); initSettingsDragClose();
-        // 순번 기준점: 한 번도 직접 저장한 적 없으면(초기 기본값 그대로면) 화면에 보이는 달의 1일을 보여줌.
+        // 순번 기준점: 한 번도 직접 저장한 적 없으면(초기 기본값 그대로면) 오늘 날짜를 보여줌.
         // 이미 저장한 적 있으면 그 값을 그대로 보여줌 (임의로 안 바뀜)
         if(userSettings.baseDateStr === '2026-06-01' && !userSettings._baseDateSaved) {
-            const y = currentDate.getFullYear(), m = currentDate.getMonth();
-            const mm = String(m+1).padStart(2,'0');
-            document.getElementById('base-date-input').value = `${y}-${mm}-01`;
+            document.getElementById('base-date-input').value = getFormattedDateStr(new Date());
         } else {
             document.getElementById('base-date-input').value = userSettings.baseDateStr;
         }
@@ -2842,9 +2835,11 @@ function openDayModal(date) {
     shiftEl.style.color = shift==='오전'?'var(--am-color)':shift==='오후'?'var(--pm-color)':shift==='연차'?'#f59f00':'var(--holiday-color)';
     renderBgColorPicker(ds);
     renderPopupAnnivList();
+    renderPopupScheduleList(ds);
     renderPopupTurnSection(date);
     document.getElementById('popup-anniv-input').value = '';
     document.getElementById('popup-anniv-yearly').checked = false;
+    document.getElementById('popup-schedule-input').value = '';
     document.getElementById('day-modal').style.display = 'flex';
     pushModalHistory();
     selectDate(date);
@@ -2869,15 +2864,15 @@ function renderBgColorPicker(ds) {
         row.appendChild(sw);
     });
     const customWrap = document.createElement('div');
-    customWrap.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    customWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
     const customInput = document.createElement('input');
     customInput.type = 'color';
     customInput.className = 'bg-color-swatch';
-    customInput.style.cssText = 'width:28px;height:28px;padding:1px;border-radius:50%;border:2px solid var(--border-input);cursor:pointer;';
+    customInput.style.cssText = 'width:28px;height:28px;padding:0;border-radius:50%;border:2px solid var(--border-input);cursor:pointer;';
     customInput.value = currentBg || '#ff8a8a'; customInput.title = '직접 색상 선택';
     customInput.addEventListener('change', () => applyBgColor(ds, customInput.value));
     const customLabel = document.createElement('span');
-    customLabel.style.cssText = 'font-size:10px;color:var(--text-sub);';
+    customLabel.style.cssText = 'font-size:9px;color:var(--text-sub);line-height:1;';
     customLabel.innerText = '직접';
     customWrap.appendChild(customInput); customWrap.appendChild(customLabel);
     row.appendChild(customWrap);
@@ -3008,16 +3003,19 @@ function renderBottomScheduleList(ds) {
     });
 }
 
-function addBottomSchedule() {
-    if(!selectedDate) return;
-    const ds = getFormattedDateStr(selectedDate);
-    const input = document.getElementById('bottom-schedule-input');
+// 날짜 길게누르기 팝업에서 일정 등록
+function addPopupSchedule() {
+    if(!dayModalDate) return;
+    const ds = getFormattedDateStr(dayModalDate);
+    const input = document.getElementById('popup-schedule-input');
     const text = input.value.trim(); if(!text) return;
     const rec = ensureDateRecord(ds);
     rec.schedules.push({title: text, memo: ''});
-    saveMemo(); input.value='';
-    renderBottomScheduleList(ds); renderCalendar();
+    saveMemo(); input.value = '';
+    renderPopupScheduleList(ds); renderBottomScheduleList(ds); renderCalendar();
     renderMonthlyScheduleList(currentDate.getFullYear(), currentDate.getMonth());
+    const cell = document.querySelector(`.day-cell[data-date="${ds}"]`);
+    if(cell) cell.classList.add('selected-active');
 }
 
 function selectDate(date) {
@@ -3031,8 +3029,6 @@ function selectDate(date) {
         `${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일 (${days[date.getDay()]}요일)`;
     const itEl = document.getElementById('info-turn');
     if(itEl) itEl.innerText = calculateTurn(date);
-    const inlineWrap = document.getElementById('bottom-inline-input');
-    if(inlineWrap) { inlineWrap.style.display='flex'; document.getElementById('bottom-schedule-input').value=''; }
     renderBottomScheduleList(selectedDateStr);
     renderDepartTimesPanel(date);
 }
