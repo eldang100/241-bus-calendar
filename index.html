@@ -282,6 +282,28 @@ self.addEventListener('fetch', e => {
             --today-ring: #b8860b;
             --nav-btn-bg: #ede8dc;
         }
+        /* ══ 스톤 모드 ══ 그레이지 톤 + 딥세이지 포인트, 무광의 차분하고 균형 잡힌 톤 ══ */
+        .stone-mode {
+            --bg-body: #e8e5dd;
+            --bg-card: #f3f1eb;
+            --bg-weekday: #ded9cd;
+            --border-color: #c9c2b0;
+            --text-main: #2d2c27;
+            --text-sub: #86806f;
+            --bg-input: #f3f1eb;
+            --border-input: #b7ae98;
+            --bg-selected-day: #dde3d5;
+            --holiday-color: #a15a42;
+            --sat-color: #52677a;
+            --bg-offday: rgba(161, 90, 66, 0.09);
+            --header-bg: linear-gradient(180deg,#efece4,#e3dfd3);
+            --detail-header-bg: linear-gradient(135deg,#e1e5d8,#d5dac8);
+            --today-ring: #4a5d4a;
+            --nav-btn-bg: #ded9cd;
+        }
+        body.stone-mode {
+            background: linear-gradient(160deg, #ece9e1 0%, #e8e5dd 55%, #ded9cd 100%);
+        }
         body.premium-mode {
             background: linear-gradient(160deg, #f8f4ec 0%, #f5f0e8 60%, #ede8dc 100%);
         }
@@ -356,6 +378,79 @@ self.addEventListener('fetch', e => {
         .premium-mode .ym-picker-dropdown { background: #faf7f0; border-color: #c8b888; }
         .premium-mode .ym-select { background: #fff8f0; border-color: #c8b888; color: #2c2415; }
         .premium-mode .ym-go-btn { background: linear-gradient(135deg,#b8860b,#d4a020); }
+
+        /* ── 스톤 모드 세부 스타일 ── */
+        .stone-mode .header { border-bottom: 1px solid #c9c2b0; background: rgba(232,229,221,0.97); }
+        .stone-mode .nav-btn { background: linear-gradient(135deg,#ded9cd,#d4cebd); border: 1px solid #b7ae98; color: #5c5646; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .stone-mode .settings-btn { background: linear-gradient(135deg,#4a5d4a,#5f7457); color: #f3f1eb; font-weight: 900; border: 1px solid #3d4d3d; box-shadow: 0 2px 8px rgba(74,93,74,0.30); }
+        .stone-mode .theme-toggle-btn { background: linear-gradient(135deg,#ded9cd,#d4cebd); border: 1px solid #b7ae98; color: #5c5646; }
+        .stone-mode .month-label-btn { color: #2d2c27; letter-spacing: 0.5px; font-weight: 900; }
+        .stone-mode .calendar-grid { border-color: #c9c2b0; }
+        .stone-mode .weekday { background: linear-gradient(180deg,#ded9cd,#d6d0c1); border-color: #c9c2b0; color: #86806f !important; }
+        .stone-mode .weekday:first-child { color: #a15a42 !important; }
+        .stone-mode .weekday:last-child  { color: #52677a !important; }
+        .stone-mode .day-cell { background-color: #f3f1eb; border-color: #d8d2c3; }
+        .stone-mode .today { box-shadow: inset 0 0 0 2.5px #4a5d4a, inset 0 0 12px rgba(74,93,74,0.10); }
+        .stone-mode .today .day-num { color: #4a5d4a !important; font-weight: 900; }
+        .stone-mode .day-cell.selected-active { background: linear-gradient(135deg,#e4e8da,#dbe0cf) !important; box-shadow: inset 0 0 0 1.5px #4a5d4a; }
+        .stone-mode .other-month { background-color: #ded9cd !important; }
+        .stone-mode .day-cell.has-schedule:not(.is-offday):not(.has-anniv):not(.selected-active) { background-color: rgba(74,93,74,0.07) !important; }
+        .stone-mode .day-cell.has-anniv:not(.is-offday):not(.selected-active) { background-color: rgba(120,100,150,0.08) !important; }
+        .stone-mode .detail-section { background: linear-gradient(180deg,#f3f1eb,#e8e5dd); border-color: #c9c2b0; box-shadow: 0 -4px 18px rgba(0,0,0,0.06); }
+        .stone-mode .detail-header { background: linear-gradient(135deg,#e1e5d8,#d5dac8); border-bottom: 1px solid #c9c2b0; }
+        .stone-mode .detail-date-main { color: #2d2c27; }
+        .stone-mode .turn-value { color: #4a5d4a !important; }
+        .stone-mode .detail-hint { color: #948d7c; border-bottom-color: #c9c2b0; }
+        .stone-mode .month-stats-box { background: linear-gradient(135deg,#ded9cd,#d6d0c1); border-color: #b7ae98; color: #2d2c27; }
+        .stone-mode .bottom-tabs-wrap { border-color: #c9c2b0; }
+        .stone-mode .holiday-section { border-color: #c9c2b0; }
+        .stone-mode .h-name { color: #2d2c27; }
+        .stone-mode .schedule-item { background: linear-gradient(135deg,#e6e3d9,#dcd8ca); border-left-color: #4a5d4a; }
+        .stone-mode .no-schedule { color: #948d7c; }
+        .stone-mode .sched-view-btn { background: linear-gradient(135deg,#4a5d4a,#5f7457); box-shadow: 0 2px 10px rgba(74,93,74,0.30); }
+        .stone-mode .sched-view-btn-label { color: #86806f; }
+        .stone-mode .day-modal-content { background: #efece4; border-color: #c9c2b0; }
+        .stone-mode .day-modal-header { background: #efece4; border-bottom-color: #c9c2b0; }
+        .stone-mode .modal-close-save-btn { background: linear-gradient(135deg,#4a5d4a,#5f7457); color: #f3f1eb; }
+        .stone-mode .drag-handle { background: #b7ae98; }
+        .stone-mode .popup-section-label { color: #86806f; }
+        .stone-mode .popup-schedule-input { background: #f3f1eb; border-color: #b7ae98; color: #2d2c27; }
+        .stone-mode .popup-schedule-item { background: #ded9cd; }
+        .stone-mode .popup-divider { background: #c9c2b0; }
+        .stone-mode .shift-select-btn:nth-child(1) { background: linear-gradient(135deg,#3f5d42,#587a5c) !important; }
+        .stone-mode .shift-select-btn:nth-child(2) { background: linear-gradient(135deg,#3a4f61,#52697d) !important; }
+        .stone-mode .shift-select-btn:nth-child(3) { background: linear-gradient(135deg,#7a4535,#a15a42) !important; }
+        .stone-mode .shift-select-btn:nth-child(4) { background: linear-gradient(135deg,#6b5a35,#8a7548) !important; }
+        .stone-mode .sched-viewer-box { background: #ece9e0; border-color: #a89e85; box-shadow: 0 -6px 28px rgba(0,0,0,0.16); }
+        .stone-mode .sched-viewer-header { border-bottom: 2px solid #a89e85; background: #e3e0d5; }
+        .stone-mode .sv-drag-handle { background: #a89e85; }
+        .stone-mode .sv-title { color: #3d4d3d; font-size: 16px; }
+        .stone-mode .sv-close-btn { background: #d4cebd; border-color: #a89e85; color: #3d4d3d; font-weight: 900; }
+        .stone-mode .sv-hint { color: #86806f; }
+        .stone-mode .sv-month-sticky { background: linear-gradient(135deg,#5f7457,#4a5d4a); color: #f3f1eb; border-bottom: 1px solid #3d4d3d; font-size:15px; letter-spacing:0.5px; }
+        .stone-mode .sv-item { background: #f0ede4; border-left: 4px solid #4a5d4a; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .stone-mode .sv-item-date { color: #3d4d3d; font-weight: 900; }
+        .stone-mode .sv-item-text { color: #2d2c27; font-size: 14px; }
+        .stone-mode .sv-item.sv-anniv { border-left-color: #52677a; background: #eaeef2; }
+        .stone-mode .sv-item.sv-anniv .sv-item-date { color: #354a5a; }
+        .stone-mode .sv-item.sv-anniv .sv-item-text { color: #263845; }
+        .stone-mode .sv-no-item { color: #a39d8c; font-style: italic; }
+        .stone-mode .settings-modal-content { background: #efece4; border-color: #c9c2b0; }
+        .stone-mode .setting-group { background: #f3f1eb; border: 1px solid #c9c2b0; }
+        .stone-mode .setting-label { color: #86806f; }
+        .stone-mode .select-input { background: #f7f5ef; border-color: #c9c2b0; color: #2d2c27; }
+        .stone-mode .day-toggle-btn { background: #f7f5ef; border-color: #c9c2b0; color: #5c5646; }
+        .stone-mode .day-toggle-btn.active { background: #4a5d4a; border-color: #3d4d3d; color: white; }
+        .stone-mode .color-swatch-btn { border-color: #c9c2b0; }
+        .stone-mode .settings-save-btn { background: linear-gradient(135deg,#4a5d4a,#5f7457); color: #f3f1eb; }
+        .stone-mode .save-btn { background: #ded9cd !important; color: #86806f !important; border: 1px solid #c9c2b0 !important; }
+        .stone-mode .modal-title { color: #2d2c27; }
+        .stone-mode .modal-title-row { border-bottom-color: #c9c2b0; }
+        .stone-mode #popup-turn-input { background: #ded9cd; border-color: #c9c2b0; color: #4a5d4a; }
+        .stone-mode .bg-color-swatch.swatch-none { background: #ded9cd; border-color: #c9c2b0; color: #86806f; }
+        .stone-mode .ym-picker-dropdown { background: #f3f1eb; border-color: #c9c2b0; }
+        .stone-mode .ym-select { background: #f7f5ef; border-color: #c9c2b0; color: #2d2c27; }
+        .stone-mode .ym-go-btn { background: linear-gradient(135deg,#4a5d4a,#5f7457); }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-weight: 700; }
 
@@ -810,6 +905,48 @@ self.addEventListener('fetch', e => {
         .cpicker-btn { flex:1; padding:10px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; }
         .cpicker-btn-cancel { background:#252836; color:#9a9db5; border:1px solid #333; }
         .cpicker-btn-ok { background:linear-gradient(135deg,#4c6ef5,#7048e8); color:white; }
+        .route-badge {
+            font-size: 12px;
+            letter-spacing: 0.3px;
+            padding: 10px 15px 6px;
+            line-height: 1;
+            border-radius: 10px;
+            background: linear-gradient(135deg,#4c6ef5,#7048e8);
+            border: none;
+            color: #fff;
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: default;
+            box-shadow: 0 3px 10px rgba(76,110,245,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+        .route-badge-num { font-size: 16px; font-weight: 900; line-height: 1; }
+        .route-badge-cal {
+            font-family: 'Segoe Script','Brush Script MT','Lucida Handwriting',cursive;
+            font-style: italic;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 1;
+            margin-left: 2px;
+            display: inline-block;
+            vertical-align: baseline;
+        }
+        .premium-mode .route-badge {
+            background: linear-gradient(135deg,#b8860b,#d4a020);
+            box-shadow: 0 3px 10px rgba(184,134,11,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+        }
+        .stone-mode .route-badge {
+            background: linear-gradient(135deg,#4a5d4a,#5f7457);
+            box-shadow: 0 3px 10px rgba(74,93,74,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+        .month-nav-group { display: flex; flex-direction: row; gap: 4px; flex-shrink: 0; }
+        .month-nav-group .nav-btn-sm {
+            padding: 8px 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; line-height: 1; border-radius: 7px;
+            background: var(--bg-weekday); border: 1px solid var(--border-input);
+            color: var(--text-main); cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -817,9 +954,9 @@ self.addEventListener('fetch', e => {
 <div class="container">
     <div>
         <div class="header">
-            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-            <div id="current-month" style="position:relative;">
-                <button class="month-label-btn" id="month-label-btn" onclick="toggleYmPicker()">2026년 6월 ▾</button>
+            <button class="route-badge"><span class="route-badge-num">241번</span><span class="route-badge-cal">Calendar</span></button>
+            <div id="current-month" style="position:relative;flex:1;text-align:center;">
+                <button class="month-label-btn" id="month-label-btn" onclick="toggleYmPicker()" style="white-space:nowrap;">2026년 6월 ▾</button>
                 <div class="ym-picker-dropdown" id="ym-picker-dropdown">
                     <div class="ym-picker-row">
                         <span class="ym-picker-label">년</span>
@@ -837,7 +974,10 @@ self.addEventListener('fetch', e => {
                     <button class="ym-go-btn" style="width:100%;" onclick="goToYm()">이동</button>
                 </div>
             </div>
-            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+            <div class="month-nav-group">
+                <button class="nav-btn-sm" onclick="changeMonth(-1)">◀</button>
+                <button class="nav-btn-sm" onclick="changeMonth(1)">▶</button>
+            </div>
             <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleThemeDirect()" title="테마 변경" style="display:flex;flex-direction:column;align-items:center;padding:4px 7px;gap:1px;">
                 <span id="theme-btn-icon" style="font-size:14px;line-height:1;">☀️</span>
                 <span id="theme-btn-label" style="font-size:8px;font-weight:700;letter-spacing:0.3px;color:var(--text-sub);">다크</span>
@@ -1726,6 +1866,38 @@ function calcAnnualLeaveDays(years) {
     return Math.min(25, 15 + Math.floor((years - 1) / 2));
 }
 
+// 입사일 기준 만 근속연수 계산 (입사 예정이면 -1 반환)
+function getServiceYears(startDateStr) {
+    const start = new Date(startDateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if(start > today) return -1;
+    let years = today.getFullYear() - start.getFullYear();
+    let anniv = new Date(start);
+    anniv.setFullYear(start.getFullYear() + years);
+    if(anniv > today) { years--; }
+    return years;
+}
+
+// 입사기념일이 지나면 연차갯수를 자동으로 다시 계산해서 갱신
+// (처음 수동으로 맞춰둔 값은 다음 입사기념일이 지나기 전까지는 그대로 유지됨)
+function checkAnnualLeaveAutoRenew() {
+    if(!annualLeaveSettings.startDate) return;
+    const years = getServiceYears(annualLeaveSettings.startDate);
+    if(years < 0) return;
+    if(typeof annualLeaveSettings.lastAppliedYears !== 'number') {
+        // 기존 데이터(또는 최초 설정)는 지금 상태를 기준점으로 삼고, 다음 기념일부터 자동 갱신 시작
+        annualLeaveSettings.lastAppliedYears = years;
+        localStorage.setItem('bus_annual_leave', JSON.stringify(annualLeaveSettings));
+        return;
+    }
+    if(years > annualLeaveSettings.lastAppliedYears) {
+        annualLeaveSettings.total = calcAnnualLeaveDays(years);
+        annualLeaveSettings.lastAppliedYears = years;
+        localStorage.setItem('bus_annual_leave', JSON.stringify(annualLeaveSettings));
+    }
+}
+
 function changeAnnualLeaveCount(delta) {
     const el = document.getElementById('al-count-display');
     let v = parseInt(el.innerText) + delta;
@@ -1763,6 +1935,8 @@ function closeAnnualLeaveModal() {
 function saveAnnualLeave() {
     annualLeaveSettings.startDate = document.getElementById('al-start-date').value;
     annualLeaveSettings.total = parseInt(document.getElementById('al-count-display').innerText);
+    const svYears = getServiceYears(annualLeaveSettings.startDate);
+    annualLeaveSettings.lastAppliedYears = svYears < 0 ? undefined : svYears;
     localStorage.setItem('bus_annual_leave', JSON.stringify(annualLeaveSettings));
     saveUserSettings();
     closeAnnualLeaveModal();
@@ -2202,6 +2376,7 @@ window.onload = function() {
     renderCalendar(); selectDate(new Date()); initSwipeFeature();
     updateThemeToggleBtn();
     applyAnnualNumSize();
+    checkAnnualLeaveAutoRenew();
     updateAnnualLeaveDisplay();
 };
 
@@ -2209,9 +2384,10 @@ window.onload = function() {
 
 // 헤더 테마 토글 버튼 (☀️/🌙)
 function applyTheme() {
-    document.body.classList.remove('light-mode','premium-mode');
+    document.body.classList.remove('light-mode','premium-mode','stone-mode');
     if(userSettings.theme === 'light') document.body.classList.add('light-mode');
     if(userSettings.theme === 'premium') document.body.classList.add('premium-mode');
+    if(userSettings.theme === 'stone') document.body.classList.add('stone-mode');
 }
 
 // 헤더 테마 토글: dark → premium → light → dark 순환
@@ -2246,7 +2422,7 @@ function updateReserveModeBtn() {
 
 
 function toggleThemeDirect() {
-    const cycle = { 'dark': 'premium', 'premium': 'light', 'light': 'dark' };
+    const cycle = { 'dark': 'premium', 'premium': 'light', 'light': 'stone', 'stone': 'dark' };
     userSettings.theme = cycle[userSettings.theme] || 'dark';
     applyTheme();
     updateThemeToggleBtn();
@@ -2257,8 +2433,8 @@ function toggleThemeDirect() {
 function updateThemeToggleBtn() {
     const iconEl = document.getElementById('theme-btn-icon');
     const labelEl = document.getElementById('theme-btn-label');
-    const icons  = { dark: '☀️', light: '🌙', premium: '✨' };
-    const labels = { dark: '다크', light: '라이트', premium: '골드' };
+    const icons  = { dark: '☀️', light: '🌙', premium: '✨', stone: '🌫️' };
+    const labels = { dark: '다크', light: '라이트', premium: '골드', stone: '스톤' };
     if(iconEl)  iconEl.innerText  = icons[userSettings.theme]  || '☀️';
     if(labelEl) labelEl.innerText = labels[userSettings.theme] || '다크';
 }
