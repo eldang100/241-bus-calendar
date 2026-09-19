@@ -2807,8 +2807,6 @@ function renderCalendar() {
     const parts = [`오전 ${am}개`, `오후 ${pm}개`, `휴무 ${off}개`];
     if(annual>0) parts.push(`연차 ${annual}개`);
     document.getElementById('month-stats-display').innerText = parts.join(' / ');
-    const tot=cont.children.length, target=Math.ceil(tot/7)*7;
-    for(let i=1;i<=target-tot;i++) createDayCell(new Date(y,m+1,i),true,cont,hSet);
     renderHolidayList(y,m);
     renderMonthlyScheduleList(y,m);
 }
