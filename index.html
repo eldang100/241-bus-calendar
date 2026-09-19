@@ -176,7 +176,7 @@
     // Service Worker
     if('serviceWorker' in navigator) {
         const swCode = `
-const CACHE = 'bus241-v3';
+const CACHE = 'bus241-v4';
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(
     caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => clients.claim())
@@ -202,7 +202,7 @@ self.addEventListener('fetch', e => {
         navigator.serviceWorker.register(swUrl).catch(()=>{});
 
         // 옛 캐시 강제 정리: 저장된 버전과 다르면 캐시 전부 비우고 1회 새로고침
-        const APP_VER = 'bus241-2026-06-25b';
+        const APP_VER = 'bus241-2026-09-19a';
         if(localStorage.getItem('__app_ver') !== APP_VER) {
             if('caches' in window) {
                 caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
@@ -476,23 +476,23 @@ self.addEventListener('fetch', e => {
 
         .container { max-width: 450px; margin: 0 auto; display: flex; flex-direction: column; gap: 4px; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 5px 6px; border-bottom: 1px solid var(--border-color); gap: 4px; flex-wrap: nowrap; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 5px 5px; border-bottom: 1px solid var(--border-color); gap: 3px; flex-wrap: nowrap; }
         .nav-btn { background: var(--bg-weekday); color: var(--text-main); border: 1px solid var(--border-input); padding: 7px 13px; font-size: 14px; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
         #current-month { font-size: 18px; color: var(--text-main); flex: 1; text-align: center; position: relative; }
-        .month-label-btn { background: none; border: none; color: var(--text-main); font-size: 18px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 2px 6px; border-radius: 6px; }
+        .month-label-btn { background: none; border: none; color: var(--text-main); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 2px 3px; border-radius: 6px; }
         .month-label-btn:hover { background: var(--bg-weekday); }
         .theme-toggle-btn {
             background: var(--bg-weekday);
             color: var(--text-main);
             border: 1px solid var(--border-input);
-            padding: 7px 9px;
+            padding: 5px 6px;
             font-size: 14px;
             border-radius: 8px;
             cursor: pointer;
             flex-shrink: 0;
             transition: background 0.2s;
         }
-        .settings-btn { background: linear-gradient(135deg,#4c6ef5,#7048e8); color: white; border: none; padding: 7px 10px; font-size: 12px; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
+        .settings-btn { background: linear-gradient(135deg,#4c6ef5,#7048e8); color: white; border: none; padding: 6px 8px; font-size: 11px; border-radius: 8px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
         .ym-picker-dropdown { display:none; position:absolute; top:110%; left:50%; transform:translateX(-50%); z-index:500; background:var(--bg-card); border:1px solid var(--border-input); border-radius:12px; padding:10px; min-width:220px; box-shadow:0 8px 28px rgba(0,0,0,0.45); }
         .ym-picker-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
         .ym-picker-label { font-size:11px; color:var(--text-sub); width:22px; flex-shrink:0; }
@@ -904,12 +904,40 @@ self.addEventListener('fetch', e => {
         .cpicker-btn { flex:1; padding:10px; font-size:14px; font-weight:700; border:none; border-radius:9px; cursor:pointer; }
         .cpicker-btn-cancel { background:#252836; color:#9a9db5; border:1px solid #333; }
         .cpicker-btn-ok { background:linear-gradient(135deg,#4c6ef5,#7048e8); color:white; }
+        .bus-drive-strip {
+            height: 34px;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-weekday);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .bus-drive-track {
+            position: absolute;
+            top: 50%;
+            margin-top: -15px;
+            left: -100px;
+            display: flex;
+            align-items: center;
+            gap: 1px;
+            animation: busDrive 6s linear infinite;
+        }
+        .bus-emoji { font-size: 30px; line-height: 1; display: inline-block; transform: scaleX(-1); }
+        .dust-puff { font-size: 15px; opacity: 0; display: inline-block; animation: dustPuff 1s ease-out infinite; }
+        @keyframes busDrive {
+            0%   { left: -100px; }
+            100% { left: 480px; }
+        }
+        @keyframes dustPuff {
+            0%   { opacity: 0; transform: translateY(2px) scale(0.5); }
+            35%  { opacity: 0.65; transform: translateY(-2px) scale(1); }
+            100% { opacity: 0; transform: translateY(-9px) scale(1.3); }
+        }
         .route-badge {
-            font-size: 12px;
-            letter-spacing: 0.3px;
-            padding: 10px 12px 6px;
+            font-size: 11px;
+            letter-spacing: 0.2px;
+            padding: 8px 9px 5px;
             line-height: 1;
-            border-radius: 10px;
+            border-radius: 9px;
             background: linear-gradient(135deg,#4c6ef5,#7048e8);
             border: none;
             color: #fff;
@@ -922,12 +950,12 @@ self.addEventListener('fetch', e => {
             box-shadow: 0 3px 10px rgba(76,110,245,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
             text-shadow: 0 1px 2px rgba(0,0,0,0.15);
         }
-        .route-badge-num { font-size: 16px; font-weight: 900; line-height: 1; }
+        .route-badge-num { font-size: 14px; font-weight: 900; line-height: 1; }
         .route-badge-cal {
             font-family: 'Segoe Script','Brush Script MT','Lucida Handwriting',cursive;
             font-style: italic;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 12px;
             line-height: 1;
             margin-left: 2px;
             display: inline-block;
@@ -954,11 +982,31 @@ self.addEventListener('fetch', e => {
 <body>
 
 <div class="container">
+    <div class="bus-drive-strip" aria-hidden="true">
+        <div class="bus-drive-track">
+            <span class="dust-puff" style="animation-delay:0s;">💨</span>
+            <span class="dust-puff" style="animation-delay:0.3s;">💨</span>
+            <span class="dust-puff" style="animation-delay:0.6s;">💨</span>
+            <span class="bus-emoji">🚌</span>
+        </div>
+        <div class="bus-drive-track" style="animation-delay:1.5s;">
+            <span class="dust-puff" style="animation-delay:0s;">💨</span>
+            <span class="dust-puff" style="animation-delay:0.3s;">💨</span>
+            <span class="dust-puff" style="animation-delay:0.6s;">💨</span>
+            <span class="bus-emoji">🚌</span>
+        </div>
+        <div class="bus-drive-track" style="animation-delay:2.5s;">
+            <span class="dust-puff" style="animation-delay:0s;">💨</span>
+            <span class="dust-puff" style="animation-delay:0.3s;">💨</span>
+            <span class="dust-puff" style="animation-delay:0.6s;">💨</span>
+            <span class="bus-emoji">🚌</span>
+        </div>
+    </div>
     <div>
         <div class="header">
             <button class="route-badge"><span class="route-badge-num">241번</span><span class="route-badge-cal">Calendar</span></button>
             <div id="current-month" style="position:relative;flex:1;min-width:0;text-align:center;overflow:hidden;">
-                <button class="month-label-btn" id="month-label-btn" onclick="toggleYmPicker()" style="white-space:nowrap;">2026년 6월 ▾</button>
+                <button class="month-label-btn" id="month-label-btn" onclick="toggleYmPicker()" style="white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:inline-block;">2026년 6월 ▾</button>
                 <div class="ym-picker-dropdown" id="ym-picker-dropdown">
                     <div class="ym-picker-row">
                         <span class="ym-picker-label">년</span>
