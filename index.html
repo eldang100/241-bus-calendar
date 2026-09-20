@@ -476,7 +476,7 @@ self.addEventListener('fetch', e => {
 
         .container { max-width: 450px; margin: 0 auto; display: flex; flex-direction: column; gap: 4px; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 5px 5px; border-bottom: 1px solid var(--border-color); gap: 3px; flex-wrap: nowrap; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 3px 5px; border-bottom: 1px solid var(--border-color); gap: 3px; flex-wrap: nowrap; }
         .nav-btn { background: var(--bg-weekday); color: var(--text-main); border: 1px solid var(--border-input); padding: 7px 13px; font-size: 14px; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
         #current-month { font-size: 18px; color: var(--text-main); flex: 1; text-align: center; position: relative; }
         .month-label-btn { background: none; border: none; color: var(--text-main); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 2px 3px; border-radius: 6px; }
@@ -565,7 +565,7 @@ self.addEventListener('fetch', e => {
         .schedule-list { display: flex; flex-direction: column; gap: 4px; }
         .schedule-item { display: flex; align-items: center; gap: 8px; background: var(--bg-weekday); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--text-main); font-weight: 400; border-left: 3px solid var(--schedule-color); }
         .schedule-item-text { flex: 1; line-height: 1.4; }
-        .no-schedule { font-size: 12px; color: var(--text-sub); padding: 2px 0; font-weight: 400; }
+        .no-schedule { font-size: 12px; color: var(--text-sub); padding: 1px 0; font-weight: 400; }
 
         .month-stats-box { margin: 0 14px 6px; font-size: 13px; color: var(--text-main); background: var(--bg-body); padding: 5px 14px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
 
@@ -579,7 +579,7 @@ self.addEventListener('fetch', e => {
         /* 법정공휴일 섹션 */
         .holiday-section {
             flex: 1;
-            padding: 6px 8px 8px;
+            padding: 4px 8px 5px;
             border-right: 1px solid var(--border-color);
         }
         .holiday-section-title { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
@@ -1089,25 +1089,25 @@ self.addEventListener('fetch', e => {
             </div>
             <!-- 배차표 + 잔여연차 + 밴드가기 + 일정보기 버튼 -->
             <div style="display:flex;gap:0px;align-items:flex-end;">
-                <div class="sched-view-btn-wrap" onclick="openTimetable()" style="padding:4px 1px;">
+                <div class="sched-view-btn-wrap" onclick="openTimetable()" style="padding:2px 1px;">
                     <div class="sched-view-btn" style="background:linear-gradient(135deg,#1c7ed6,#4dabf7);box-shadow:0 2px 8px rgba(28,126,214,0.4);">
                         <span style="font-size:20px;line-height:1;">🚌</span>
                     </div>
                     <div class="sched-view-btn-label">배차표</div>
                 </div>
-                <div class="sched-view-btn-wrap" onclick="openAnnualLeaveModal()" style="padding:4px 1px;">
+                <div class="sched-view-btn-wrap" onclick="openAnnualLeaveModal()" style="padding:2px 1px;">
                     <div class="sched-view-btn" style="background:linear-gradient(135deg,#e67700,#f59f00);box-shadow:0 2px 8px rgba(245,159,0,0.4);">
                         <div id="annual-leave-display" style="font-weight:900;color:#fff;line-height:1;font-size:18px;">-</div>
                     </div>
                     <div class="sched-view-btn-label">잔여연차</div>
                 </div>
-                <div class="sched-view-btn-wrap" onclick="openNaverBand()" style="padding:4px 1px;">
+                <div class="sched-view-btn-wrap" onclick="openNaverBand()" style="padding:2px 1px;">
                     <div class="sched-view-btn" style="background:linear-gradient(135deg,#00c73c,#009e2e);box-shadow:0 2px 8px rgba(0,180,60,0.35);">
                         <span style="font-size:20px;line-height:1;">📣</span>
                     </div>
                     <div class="sched-view-btn-label">밴드가기</div>
                 </div>
-                <div class="sched-view-btn-wrap" onclick="openSchedViewer()" style="padding:4px 1px;">
+                <div class="sched-view-btn-wrap" onclick="openSchedViewer()" style="padding:2px 1px;">
                     <div class="sched-view-btn">
                         📋
                         <span class="sched-count-dot" id="sched-count-dot"></span>
